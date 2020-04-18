@@ -12,7 +12,7 @@ for (j in 1:nrow(df_tracks)){
   j=j+1
 }
 
-
+if (k>1){
 user_1_tracks <- matrix(unlist(user_1_list_tracks), ncol = 18, byrow = TRUE)
 
 
@@ -24,6 +24,6 @@ colnames(user_1_tracks)<-c("id","device_type","distance_from_previous_mts","jour
 
   myfile <- file.path("C:/Users/39346/Documents/appstat_project/local_data/journey/", paste0("User", "_", i, ".txt"))  #put here the correct path for your computer
   write.table(user_1_tracks, file = myfile, sep = " ,", row.names = FALSE, col.names = TRUE,
-              quote = FALSE, append = FALSE)
+              quote = FALSE, append = FALSE)}
 }
 
