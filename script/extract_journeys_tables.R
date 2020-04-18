@@ -5,9 +5,9 @@ journey_1_list_tracks<-empty_list <- vector(mode = "list", length = 18)
 
 k=1
 j=1
-for (j in df_tracks$journey_id){
-  if (j==i) 
-  {journey_1_list_tracks[[k]]= df_tracks[k,1:18]
+for (j in 1:nrow(df_tracks)){
+  if (df_tracks$journey_id[j]==i) 
+  {journey_1_list_tracks[[k]]= df_tracks[j,1:18]
   k = k+1}
   j=j+1
 }
