@@ -26,3 +26,4 @@ colnames(journey_1_tracks)<-c("id","device_type","distance_from_previous_mts","j
   write.table(journey_1_tracks, file = myfile, sep = " ,", row.names = FALSE, col.names = TRUE,
               quote = FALSE, append = FALSE)
 }
+
