@@ -15,6 +15,7 @@ df <- data.frame( dep_lat = df_trips_pos$dep_lat, dep_lng = df_trips_pos$dep_lng
 df <- df[!duplicated(df$depName),]
 
 leaflet(data = df) %>% addTiles() %>%
+  addProviderTiles(providers$OpenStreetMap)  %>% 
   addCircleMarkers(~df$dep_lng, ~df$dep_lat, label = ~as.character(df$depName))
 
 ## Plottare tracks per utente ##
@@ -28,6 +29,7 @@ df1 <- data.frame( lat = df_tracks$lat[1:8], lng = df_tracks$lng[1:8],
                   pointcode = seq(1,8))
 
 leaflet(data = df1) %>% addTiles() %>%
+  addProviderTiles(providers$OpenStreetMap)  %>% 
   addCircleMarkers(~lng, ~lat, label = ~as.character(pointcode))
 
 #journey2 #TODO: lavorare in automatico con journey id
@@ -36,7 +38,9 @@ df2 <- data.frame( lat = df_tracks$lat[9:83], lng = df_tracks$lng[9:83],
                    pointcode = seq(1,75))
 
 leaflet(data = df2) %>% addTiles() %>%
+  addProviderTiles(providers$OpenStreetMap)  %>% 
   addCircleMarkers(~lng, ~lat, label = ~as.character(pointcode), radius=3)
 
 # Se caricate troppa roba e vi si impalla il Viewer, 
 # usate la scopettina per cancellare tutto
+
