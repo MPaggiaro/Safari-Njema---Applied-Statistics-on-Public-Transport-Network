@@ -1,3 +1,11 @@
+#######################################################################################
+#
+# AGGREGATE DATA:
+# Takes the raw data folders (as downloaded from Google Drive) and aggregates all data
+# in two files that can be imported using `import_data.R`
+#
+#######################################################################################
+
 # Importing Tracks files
 aggregate_txt = function(ref_path){
   

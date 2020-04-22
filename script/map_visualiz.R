@@ -1,7 +1,7 @@
 #setwd("/Users/pietro/Documents/appstat_project")
 #rm(list = ls())
 
-### Settate la vostra wd ###
+### Settate la vostra wd // ###
 
 library(leaflet)
 
