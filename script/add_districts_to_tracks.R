@@ -13,7 +13,7 @@ my_map <- readOGR(
   verbose=FALSE
 )
 
-
+df_tracks_districts <- df_tracks 
 dat <- data.frame( Longitude=df_tracks_districts$lng, Latitude=df_tracks_districts$lat )
 
 
@@ -27,4 +27,5 @@ district <- over(dat,my_map)
 df_tracks_districts <- cbind(df_tracks, c(district))
 colnames(df_tracks_districts)[19] <- c("district_id")
 colnames(df_tracks_districts)[20] <- c("district_name")
+
 
