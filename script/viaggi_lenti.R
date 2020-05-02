@@ -23,7 +23,7 @@ trip_to_tracks = function(trip_row, df_tracks)
 
 
 #mappa mascaretti
-my_map <- readOGR( 
+district_map <- readOGR( 
   dsn= paste0(getwd(),"/DistrictMap") , 
   layer="HomogenousDivisionOK",
   verbose=FALSE
@@ -31,18 +31,16 @@ my_map <- readOGR(
 
 #aggiungo tutti i distretti al tracks
 
-df_tracks_districts <- df_tracks 
-dat <- data.frame( Longitude=df_tracks_districts$lng, Latitude=df_tracks_districts$lat )
+points <- data.frame( east=df_tracks$Easting, north=df_tracks$Northing )
+coordinates(points) <- ~ east + north
+proj4string(points) <- proj4string(district_map)
 
-coordinates(dat) <- ~ Longitude + Latitude
-proj4string(dat) <- proj4string(my_map)
+district <- over(points,district_map)
 
-district_tracks <- over(dat,my_map)
-
-
-df_tracks_districts <- cbind(df_tracks_districts, c(district_tracks))
-colnames(df_tracks_districts)[19] <- c("district_id")
-colnames(df_tracks_districts)[20] <- c("district_name")
+#add the columns with the district id
+df_tracks_districts <- cbind(df_tracks, c(district))
+colnames(df_tracks_districts)[colnames(df_tracks_districts)=="fid"] <- "district_id"
+head(df_tracks_districts)
 
 ## cos'è un viaggio lungo?
 
@@ -62,50 +60,35 @@ slow_tracks = NULL
 
 a = df_tracks$day*100000+df_tracks$journey_id
 b = slow_trips$day*100000+slow_trips$journey_id
-slow_tracks = df_tracks[  a%in%b, ]
+slow_tracks = df_tracks_districts[  a%in%b, ]
 
+points <- data.frame( east=slow_tracks$Easting, north=slow_tracks$Northing )
+coordinates(points) <- ~ east + north
+proj4string(points) <- proj4string(district_map)
+district_slow <- over(points,district_map)
 
-
-# aggiungo i distretti a slow_tracks (perchè non l ho fatto prima)
-
-
-
-df_tracks_districts <- slow_tracks
-dat <- data.frame( Longitude=df_tracks_districts$lng, Latitude=df_tracks_districts$lat )
-
-
-coordinates(dat) <- ~ Longitude + Latitude
-proj4string(dat) <- proj4string(my_map)
-
-district <- over(dat,my_map)
-
-
-
-slow_tracks_districts <- cbind(slow_tracks, c(district))
-colnames(slow_tracks_districts)[19] <- c("district_id")
-colnames(slow_tracks_districts)[20] <- c("district_name")
+x11()
 
 #plot slow
 map_new_format <- st_read("DistrictMap/HomogenousDivisionOK.shp")
 head(map_new_format)
-par(mar=c(0,0,0,0))
 plot(my_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
-count_districts <- count(district, "id")
+count_districts <- count(district_slow, "cat")
 map_new_format$cat <- as.factor(map_new_format$cat)
-count_districts$cat <- as.factor(count_districts$id)
+count_districts$cat<- as.factor(count_districts$district_id)
 map_and_data <- left_join(map_new_format,count_districts)
-
 qtm(map_and_data, "freq")
 
 #plot all
-
+x11()
 map_new_format <- st_read("DistrictMap/HomogenousDivisionOK.shp")
 head(map_new_format)
 par(mar=c(0,0,0,0))
 plot(my_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
-count_districts <- count(district_track, "id")
+count_districts <- count(district, "cat")
 map_new_format$cat <- as.factor(map_new_format$cat)
-count_districts$cat <- as.factor(count_districts$id)
+count_districts$cat<- as.factor(count_districts$district_id)
 map_and_data <- left_join(map_new_format,count_districts)
 
 qtm(map_and_data, "freq")
+
