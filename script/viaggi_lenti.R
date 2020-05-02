@@ -42,7 +42,7 @@ df_tracks_districts <- cbind(df_tracks, c(district))
 colnames(df_tracks_districts)[colnames(df_tracks_districts)=="fid"] <- "district_id"
 head(df_tracks_districts)
 
-## cos'è un viaggio lungo?
+## cos'è un viaggio lento?
 
 hist(df_trips_pos$distance[which(df_trips_pos$distance < 50000)], breaks = 200)
 
@@ -69,10 +69,10 @@ district_slow <- over(points,district_map)
 
 x11()
 
-#plot slow
+#plot slow 
 map_new_format <- st_read("DistrictMap/HomogenousDivisionOK.shp")
 head(map_new_format)
-plot(my_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
+plot(district_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
 count_districts <- count(district_slow, "cat")
 map_new_format$cat <- as.factor(map_new_format$cat)
 count_districts$cat<- as.factor(count_districts$district_id)
@@ -84,7 +84,7 @@ x11()
 map_new_format <- st_read("DistrictMap/HomogenousDivisionOK.shp")
 head(map_new_format)
 par(mar=c(0,0,0,0))
-plot(my_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
+plot(district_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
 count_districts <- count(district, "cat")
 map_new_format$cat <- as.factor(map_new_format$cat)
 count_districts$cat<- as.factor(count_districts$district_id)
@@ -92,3 +92,28 @@ map_and_data <- left_join(map_new_format,count_districts)
 
 qtm(map_and_data, "freq")
 
+
+# per il distretto 5
+distr_id=11
+all_districts = sort(unique(df_tracks_districts$district_id[!is.na(df_tracks_districts$district_id)]))
+m <- empty_list <- vector(mode = "list")
+tutti = NULL
+for (distr_id in all_districts)
+{
+  ids = df_tracks_districts[which(df_tracks_districts$district_id == distr_id),]
+  ids = ids$day*100000+ids$journey_id
+  ids = unique(ids)
+  trips_ids = df_trips_pos$day*100000+df_trips_pos$journey_id
+  harambe = df_trips_pos[ trips_ids %in% ids, ]
+  row_k = harambe$distance / harambe$duration
+  m[[distr_id]] = row_k
+  tutti = append(tutti,row_k)
+}
+
+tutti_gaussiani = tan(tutti)
+qqnorm(tutti_gaussiani)
+qqline(tutti_gaussiani)
+tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
+hist(tutti_gaussiani_hist,breaks=200)
+mu_tot = mean(tutti_gaussiani)
+var_tot = var(tutti_gaussiani)
