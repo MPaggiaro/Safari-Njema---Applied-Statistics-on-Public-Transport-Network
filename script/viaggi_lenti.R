@@ -117,3 +117,21 @@ tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
 hist(tutti_gaussiani_hist,breaks=200)
 mu_tot = mean(tutti_gaussiani)
 var_tot = var(tutti_gaussiani)
+
+
+##### Ve la butto lì, what if la nostra distribuzione è una t-Student? #####
+# con le normali, le code sono troppo magre... #
+x11()
+tutti_gaussiani = tan(tutti)
+mu_tot = mean(tutti_gaussiani)
+sd_tot = sd(tutti_gaussiani)
+tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
+h <- hist(tutti_gaussiani_hist, breaks=200, density = 10,
+          col = "lightgray", xlab = "Accuracy", main = "Overall")
+
+xfit <- seq(min(tutti_gaussiani_hist), max(tutti_gaussiani_hist), length = 40) 
+yfit <- dt(xfit, df=1) 
+yfit <- yfit * diff(h$mids[1:2]) * length(tutti_gaussiani_hist)
+
+lines(xfit, yfit, col = "black", lwd = 2)
+###
