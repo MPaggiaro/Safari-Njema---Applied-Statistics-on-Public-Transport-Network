@@ -60,6 +60,9 @@ df_trips_district <- df_trips_district[!is.na(df_trips_district$arr_ID),]
 zones<- my_map$X_id
 n<-length(zones)
 #matrix 
+ID_brutti <- data.frame(df_trips_district$dep_ID)
+zones <- as.vector(zones)
+ID_belli =which(zones %in% ID_brutti)
 
 for (i in seq(1, dim(df_trips_district)[1])){
   
