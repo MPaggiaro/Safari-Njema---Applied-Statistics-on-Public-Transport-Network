@@ -56,3 +56,6 @@ df_trips_district <- df_trips_district[!is.na(df_trips_district$arr_ID),]
 
 #### Step 3: counter.
 
+
+
+#### Step 4: CHi^2 test
