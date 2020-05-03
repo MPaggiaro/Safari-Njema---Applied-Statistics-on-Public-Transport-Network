@@ -64,47 +64,50 @@ ID_brutti <- data.frame(df_trips_district$dep_ID)
 zones <- as.vector(zones)
 ID_belli =which(zones %in% ID_brutti)
 
+v1 <- NULL
+v2 <- NULL
+
 for (i in seq(1, dim(df_trips_district)[1])){
   
   if(df_trips_district$dep_ID[i] == "relation/3348585"){
-    df_trips_district$dep_ID[i]<- "1"
+    v1[i]<- 1
   }
   
   if(df_trips_district$arr_ID[i] == "relation/3348585"){
-    df_trips_district$arr_ID[i]<- "1"
+    v2[i]<- 1
   }
   
   
   if(df_trips_district$dep_ID[i] == "relation/3348586"){
-    df_trips_district$dep_ID[i]<- "2"
+    v1[i] <- 2
   }
   
   if(df_trips_district$arr_ID[i] == "relation/3348586"){
-    df_trips_district$arr_ID[i]<- "2"
+    v2[i]<- 2
   }
   
   if(df_trips_district$dep_ID[i] == "relation/3348587"){
-    df_trips_district$dep_ID[i]<- "3"
+    v1[i]<- 3
   }
   
   if(df_trips_district$arr_ID[i] == "relation/3348587"){
-    df_trips_district$arr_ID[i]<- "3"
+    v2[i]<- 3
   }
   
   if(df_trips_district$dep_ID[i] == "relation/3348588"){
-    df_trips_district$dep_ID[i]<- "4"
+    v1[i]<- 4
   }
   
   if(df_trips_district$arr_ID[i] == "relation/3348588"){
-    df_trips_district$arr_ID[i]<- "4"
+    v2[i]<- 4
   }
   
   if(df_trips_district$dep_ID[i] == "relation/3348589"){
-    df_trips_district$dep_ID[i]<- "5"
+    v1[i]<- 5
   }
   
   if(df_trips_district$arr_ID[i] == "relation/3348589"){
-    df_trips_district$arr_ID[i]<- "5"
+    v2[i]<- 5
   }
   
 }
