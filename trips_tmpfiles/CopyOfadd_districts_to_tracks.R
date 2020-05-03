@@ -4,6 +4,7 @@ library(leaflet)
 library(sf)
 library(rgdal)
 library(sp)
+library(plyr)
 
 
 #########################################################################################
@@ -109,10 +110,31 @@ for (i in seq(1, dim(df_trips_district)[1])){
   
 }
 
+df_trips_district <- cbind(df_trips_district,v1,v2)
+
+df_trips_district$dep_ID <- NULL
+df_trips_district$arr_ID <- NULL
+
+names(df_trips_district)[names(df_trips_district) == "v1"] <- "depID"
+names(df_trips_district)[names(df_trips_district) == "v2"] <- "arrID"
+
 d.flows<-matrix(0, n,  n) 
-colnames(d.flows)<-c.
-rownames(d.flows)<-my_map$name
+colnames(d.flows)<-c(1:5)
+rownames(d.flows)<-c(1:5)
 
+#select a day (50)
 
+df_trips_district.50<-df_trips_district[df_trips_district$day == 50, ]
+
+for (i in c(1:5)){
+  arr<- df_trips_district.50[df_trips_district.50$depID == i, grep("arrID", colnames(df_trips_district))]
+  f<- count(arr)
+  for (j in f$x){
+    d.city_center_flows[paste0(i),paste0(j)]<-f[f$x==j,2]
+  }
+}
+
+d.city_center_flows.50<-d.city_center_flows
+d.city_center_flows.50
 
 #### Step 4: CHi^2 test
