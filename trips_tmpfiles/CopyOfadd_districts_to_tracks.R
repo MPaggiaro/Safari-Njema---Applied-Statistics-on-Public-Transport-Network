@@ -13,6 +13,7 @@ my_map <- readOGR(
   verbose=FALSE
 )
 
+
 dep_data <- data.frame( Longitude=df_trips_pos$dep_lng, Latitude=df_trips_pos$dep_lat )
 
 
@@ -55,6 +56,59 @@ df_trips_district <- df_trips_district[!is.na(df_trips_district$arr_ID),]
 
 
 #### Step 3: counter.
+
+zones<- my_map$X_id
+n<-length(zones)
+#matrix 
+
+for (i in seq(1, dim(df_trips_district)[1])){
+  
+  if(df_trips_district$dep_ID[i] == "relation/3348585"){
+    df_trips_district$dep_ID[i]<- "1"
+  }
+  
+  if(df_trips_district$arr_ID[i] == "relation/3348585"){
+    df_trips_district$arr_ID[i]<- "1"
+  }
+  
+  
+  if(df_trips_district$dep_ID[i] == "relation/3348586"){
+    df_trips_district$dep_ID[i]<- "2"
+  }
+  
+  if(df_trips_district$arr_ID[i] == "relation/3348586"){
+    df_trips_district$arr_ID[i]<- "2"
+  }
+  
+  if(df_trips_district$dep_ID[i] == "relation/3348587"){
+    df_trips_district$dep_ID[i]<- "3"
+  }
+  
+  if(df_trips_district$arr_ID[i] == "relation/3348587"){
+    df_trips_district$arr_ID[i]<- "3"
+  }
+  
+  if(df_trips_district$dep_ID[i] == "relation/3348588"){
+    df_trips_district$dep_ID[i]<- "4"
+  }
+  
+  if(df_trips_district$arr_ID[i] == "relation/3348588"){
+    df_trips_district$arr_ID[i]<- "4"
+  }
+  
+  if(df_trips_district$dep_ID[i] == "relation/3348589"){
+    df_trips_district$dep_ID[i]<- "5"
+  }
+  
+  if(df_trips_district$arr_ID[i] == "relation/3348589"){
+    df_trips_district$arr_ID[i]<- "5"
+  }
+  
+}
+
+d.flows<-matrix(0, n,  n) 
+colnames(d.flows)<-c.
+rownames(d.flows)<-my_map$name
 
 
 
