@@ -3,7 +3,7 @@
 
 library(plyr)
 
-if (!exists("df_tracks")){
+if (!exists("df_trips")){
   df_trips <- read.table("local_data/df_trips_pos.txt")
 }
 
@@ -25,7 +25,17 @@ for (i in seq(1,length(df_dist_2))){
 
 # TODO: occhio a cbind: se non qualche zona ha frequenza nulla, lunghezze non corrispondono
 df_pearson <- cbind(day1 = count(df_dist_1)[,2],day2 = count(df_dist_2)[,2])
+
+
+#
+## nel codice del chisq.test:
+#
+#if (any(E < 5) && is.finite(PARAMETER)) 
+#   warning("Chi-squared approximation may be incorrect")
+#
+
 chisq.test(df_pearson)
+
 
 
 ### Pearson test fatto a mano (stesso risultato)
