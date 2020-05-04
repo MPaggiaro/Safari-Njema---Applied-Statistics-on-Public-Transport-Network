@@ -17,8 +17,8 @@ library(plyr)
 # including map
 
 my_map <- readOGR( 
-  dsn= paste0(getwd(),"/trips_tmpfiles/export") , 
-  layer="export2",
+  dsn= paste0(getwd(),"/trips_tmpfiles/shp_files") , 
+  layer="Maputo5distr",
   verbose=FALSE
 )
 
@@ -35,11 +35,11 @@ coordinates(dep_data) <- ~ Longitude + Latitude
 proj4string(dep_data) <- proj4string(my_map)
 
 district <- over(dep_data,my_map)
-district <- district[,c(1,5)]
+district <- district[,c(2,1)]
 
 
 df_trips_district <- cbind(df_trips_pos, c(district))
-names(df_trips_district)[names(df_trips_district) == "X_id"] <- "dep_ID"
+names(df_trips_district)[names(df_trips_district) == "Zone_ID"] <- "dep_ID"
 names(df_trips_district)[names(df_trips_district) == "name"] <- "dep_zone"
 
 
@@ -54,11 +54,11 @@ proj4string(arr_data) <- proj4string(my_map)
 
 district <- over(arr_data,my_map)
 head(district)
-district <- district[,c(1,5)]
+district <- district[,c(2,1)]
 
 
 df_trips_district <- cbind(df_trips_district, c(district))
-names(df_trips_district)[names(df_trips_district) == "X_id"] <- "arr_ID"
+names(df_trips_district)[names(df_trips_district) == "Zone_ID"] <- "arr_ID"
 names(df_trips_district)[names(df_trips_district) == "name"] <- "arr_zone"
 
 
@@ -70,45 +70,45 @@ df_trips_district <- df_trips_district[!is.na(df_trips_district$arr_ID),]
 
 #### Step 3: counter.
 
-zones<- my_map$X_id
+zones<- my_map$Zone_ID
 exist_na <- (length(which(is.na(df_trips_district$dep_ID))) > 0) ||
   (length(which(is.na(df_trips_district$arr_ID))) > 0) #modo idiota per checkare se abbiamo tenuto i NA
 n<-length(zones) + exist_na
 
-v1 <- NULL
-v2 <- NULL
+#v1 <- NULL
+#v2 <- NULL
 
-for ( i in seq(1, dim(df_trips_district)[1]) ){
-  
-  if ( is.na(df_trips_district$dep_ID[i]) ){ 
-    v1[i] <- 6 # set na to 6
-  }else{
-    if(df_trips_district$dep_ID[i] == "relation/3348585"){ v1[i] <- 1 }
-    if(df_trips_district$dep_ID[i] == "relation/3348586"){ v1[i] <- 2 }
-    if(df_trips_district$dep_ID[i] == "relation/3348587"){ v1[i] <- 3 }
-    if(df_trips_district$dep_ID[i] == "relation/3348588"){ v1[i] <- 4 }
-    if(df_trips_district$dep_ID[i] == "relation/3348589"){ v1[i] <- 5 }
-  }
-  
-  if ( is.na(df_trips_district$arr_ID[i]) ){ 
-    v2[i] <- 6 # set na to 6
-  }else{
-    if(df_trips_district$arr_ID[i] == "relation/3348585"){ v2[i] <- 1 }
-    if(df_trips_district$arr_ID[i] == "relation/3348586"){ v2[i] <- 2 }
-    if(df_trips_district$arr_ID[i] == "relation/3348587"){ v2[i] <- 3 }
-    if(df_trips_district$arr_ID[i] == "relation/3348588"){ v2[i] <- 4 }
-    if(df_trips_district$arr_ID[i] == "relation/3348589"){ v2[i] <- 5 }
-  }
-  
-}
+# for ( i in seq(1, dim(df_trips_district)[1]) ){
+#   
+#   if ( is.na(df_trips_district$dep_ID[i]) ){ 
+#     v1[i] <- 6 # set na to 6
+#   }else{
+#     if(df_trips_district$dep_ID[i] == "relation/3348585"){ v1[i] <- 1 }
+#     if(df_trips_district$dep_ID[i] == "relation/3348586"){ v1[i] <- 2 }
+#     if(df_trips_district$dep_ID[i] == "relation/3348587"){ v1[i] <- 3 }
+#     if(df_trips_district$dep_ID[i] == "relation/3348588"){ v1[i] <- 4 }
+#     if(df_trips_district$dep_ID[i] == "relation/3348589"){ v1[i] <- 5 }
+#   }
+#   
+#   if ( is.na(df_trips_district$arr_ID[i]) ){ 
+#     v2[i] <- 6 # set na to 6
+#   }else{
+#     if(df_trips_district$arr_ID[i] == "relation/3348585"){ v2[i] <- 1 }
+#     if(df_trips_district$arr_ID[i] == "relation/3348586"){ v2[i] <- 2 }
+#     if(df_trips_district$arr_ID[i] == "relation/3348587"){ v2[i] <- 3 }
+#     if(df_trips_district$arr_ID[i] == "relation/3348588"){ v2[i] <- 4 }
+#     if(df_trips_district$arr_ID[i] == "relation/3348589"){ v2[i] <- 5 }
+#   }
+#   
+# }
 
-df_trips_district <- cbind(df_trips_district,v1,v2)
+#df_trips_district <- cbind(df_trips_district,v1,v2)
 
-df_trips_district$dep_ID <- NULL
-df_trips_district$arr_ID <- NULL
+#df_trips_district$dep_ID <- NULL
+#df_trips_district$arr_ID <- NULL
 
-names(df_trips_district)[names(df_trips_district) == "v1"] <- "dep_ID"
-names(df_trips_district)[names(df_trips_district) == "v2"] <- "arr_ID"
+#names(df_trips_district)[names(df_trips_district) == "v1"] <- "dep_ID"
+#names(df_trips_district)[names(df_trips_district) == "v2"] <- "arr_ID"
 
 #### Step 4: testing.
 
