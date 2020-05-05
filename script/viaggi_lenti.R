@@ -93,10 +93,8 @@ map_and_data <- left_join(map_new_format,count_districts)
 qtm(map_and_data, "freq")
 
 
-# per il distretto 5
-distr_id=11
 all_districts = sort(unique(df_tracks_districts$district_id[!is.na(df_tracks_districts$district_id)]))
-m <- empty_list <- vector(mode = "list")
+speed <- empty_list <- vector(mode = "list")
 tutti = NULL
 for (distr_id in all_districts)
 {
@@ -106,7 +104,7 @@ for (distr_id in all_districts)
   trips_ids = df_trips_pos$day*100000+df_trips_pos$journey_id
   harambe = df_trips_pos[ trips_ids %in% ids, ]
   row_k = harambe$distance / harambe$duration
-  m[[distr_id]] = row_k
+  speed[[distr_id]] = row_k
   tutti = append(tutti,row_k)
 }
 
@@ -120,7 +118,7 @@ var_tot = var(tutti_gaussiani)
 
 
 ##### Ve la butto lì, what if la nostra distribuzione è una t-Student? #####
-# con le normali, le code sono troppo magre... #
+# con le normali, le code sono troppo magre... # yesss
 x11()
 tutti_gaussiani = tan(tutti)
 mu_tot = mean(tutti_gaussiani)
@@ -130,8 +128,57 @@ h <- hist(tutti_gaussiani_hist, breaks=200, density = 10,
           col = "lightgray", xlab = "Accuracy", main = "Overall")
 
 xfit <- seq(min(tutti_gaussiani_hist), max(tutti_gaussiani_hist), length = 40) 
+
+
 yfit <- dt(xfit, df=1) 
+yfit <- dt(xfit)
 yfit <- yfit * diff(h$mids[1:2]) * length(tutti_gaussiani_hist)
 
 lines(xfit, yfit, col = "black", lwd = 2)
-###
+
+########
+
+district_distribution = function (speed_row){
+tutti_gaussiani = tan(speed_row)
+tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
+h <- hist(tutti_gaussiani_hist, breaks=200, density = 10,
+          col = "lightgray", xlab = "Accuracy", main = "Overall")
+
+xfit <- seq(min(tutti_gaussiani_hist), max(tutti_gaussiani_hist), length = 40) 
+
+
+yfit <- dt(xfit, df=1) 
+yfit <- yfit * diff(h$mids[1:2]) * length(tutti_gaussiani_hist)
+lines(xfit, yfit, col = "red", lwd = 2)
+return(shapiro.test(speed_row))
+}
+
+district_distribution(speed[[20]])
+
+
+#test sulla media della velocità media nei distretti
+speed_clean = empty_list
+speed_tutti = NULL
+id = NULL
+j=1
+for (i in 1:405){
+  if ( lengths(speed)[i]>1 ) {
+  speed_clean[[j]] = speed[[i]]
+  speed_tutti = append(speed_tutti, speed_clean[[j]])
+  id = append(id,rep(j,lengths(speed)[i]))
+  j=j+1}
+}
+data <- data.frame(speed_tutti, id)
+bartlett.test(speed_clean)  #pd
+
+attach(data)
+summary(data)
+
+
+fit <- aov( speed_tutti ~ id  )
+
+summary(fit)
+
+
+
+
