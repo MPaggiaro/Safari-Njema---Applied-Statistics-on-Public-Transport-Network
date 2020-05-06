@@ -113,3 +113,4 @@ hist(hour_100$dep_hour,breaks = 24)
 
 count_100 =count(trips_100,"dep_hour")
 plot(count_100$dep_hour, count_100$freq)
+
