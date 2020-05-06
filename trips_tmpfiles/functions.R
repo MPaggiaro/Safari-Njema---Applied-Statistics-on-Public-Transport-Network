@@ -1,6 +1,5 @@
 #utility functions for tmp files
 
-
 # my_map <- readOGR(
 #   dsn= paste0(getwd(),"/trips_tmpfiles/shp_files") ,
 #   layer="Maputo5distr",
@@ -46,4 +45,37 @@ add_zones_labels<- function (df_trips_pos, my_map){
 
 }
 
+#INPUT: 
+# - df_trips_district dataframe 
+# - mondayDay : starting day of the week you want to study
+# - depZone
+# - startH= 0 and endH =24 for setting the time slot of interest, otherwise by default all day long
 
+weekly_test <- function(df_trips_district, mondayDay, depZone, startH= 0, endH =24){
+  
+  N<-7
+  pval_mtrx <- matrix(0, N,  N) 
+  colnames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
+  rownames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
+  
+  #set time slot
+  
+  df_trips_district<- df_trips_district[ df_trips_district$dep_hour >= startH && df_trips_district$dep_hour <= endH ,]
+  
+  
+  for ( i in seq(1,N-1, by=1) ){
+    df_dist_1 <- df_trips_district[df_trips_district$dep_ID == depZone & df_trips_district$day == baseday + i - 1 , 
+                                   grep("arr_ID", colnames(df_trips_district))]
+    for ( j in seq(i,N-1) ){
+      df_dist_2 <- df_trips_district[df_trips_district$dep_ID == depZone & df_trips_district$day == baseday + j , 
+                                     grep("arr_ID", colnames(df_trips_district))]
+      
+      df_pearson <- cbind(day1 = count(df_dist_1)[,2],day2 = count(df_dist_2)[,2])
+      #print(df_pearson) 
+      result <- chisq.test(df_pearson) 
+      pval_mtrx[i,j+1] <- result$p.value # collecting p_values
+    }
+  }
+  
+  return(pval_mtrx)
+}
