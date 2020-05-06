@@ -1,7 +1,5 @@
-#
-tracks <- read.table("local_data/Tracks/tracks_71.txt", header=T)
-
-# run import_data
+# import data
+df_tracks <- read.table("local_data/df_tracks.txt", header=T)
 
 # including map
 
@@ -35,6 +33,6 @@ morning = rep(0,N)
 # unique:
 for (i in seq(31,180)){
   tracks_3_m_daily <- tracks_3_morning[tracks_3_morning$day==i,]
-  tracks_3_m_daily <- tracks_3_m_daily[!duplicated(tracks_3_morning$id),]
+  tracks_3_m_daily <- tracks_3_m_daily[!duplicated(tracks_3_m_daily$id),]
   morning[i-30] <- dim(tracks_3_m_daily)[1]
 }
