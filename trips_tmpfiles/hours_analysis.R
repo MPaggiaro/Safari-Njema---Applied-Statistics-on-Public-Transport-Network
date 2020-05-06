@@ -83,5 +83,33 @@ hours_arr_count <- is.numeric(hours_arr_count)
 hist(hour_data_center$dep_hour,breaks = 24)
 
 
-# select fasce orarie:
+# for some other days (similar):
+source("trips_tmpfiles/functions.R", encoding = "UTF-8")
 
+trips_72 <- add_zones_labels(trips_72,my_map)
+trips_73 <- add_zones_labels(trips_73,my_map)
+trips_74 <- add_zones_labels(trips_74,my_map)
+
+hour_72 <- trips_72[trips_72$dep_ID==3 || trips_72$arr_ID==3,c(10,16)]
+x11()
+hist(hour_72$dep_hour,breaks = 24)
+
+hour_73 <- trips_73[trips_73$dep_ID==3 || trips_73$arr_ID==3,c(10,16)]
+x11()
+hist(hour_73$dep_hour,breaks = 24)
+hour_74 <- trips_74[trips_74$dep_ID==3 || trips_74$arr_ID==3,c(10,16)]
+x11()
+hist(hour_74$dep_hour,breaks = 24)
+
+
+# very different one:
+
+trips_100 <- read.table("local_data/Trips/WithPosInfo/trips_100.txt", header=T)
+
+trips_100 <- add_zones_labels(trips_100,my_map)
+hour_100 <- trips_100[trips_100$dep_ID==3 || trips_100$arr_ID==3,c(10,16)]
+x11()
+hist(hour_100$dep_hour,breaks = 24)
+
+count_100 =count(trips_100,"dep_hour")
+plot(count_100$dep_hour, count_100$freq)
