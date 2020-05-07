@@ -108,7 +108,7 @@ for (distr_id in all_districts)
   tutti = append(tutti,row_k)
 }
 
-tutti_gaussiani = tan(tutti)
+tutti_gaussiani = tan(4*tutti)
 qqnorm(tutti_gaussiani)
 qqline(tutti_gaussiani)
 tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
@@ -119,24 +119,6 @@ var_tot = var(tutti_gaussiani)
 
 ##### Ve la butto lì, what if la nostra distribuzione è una t-Student? #####
 # con le normali, le code sono troppo magre... # yesss
-x11()
-tutti_gaussiani = tan(tutti)
-mu_tot = mean(tutti_gaussiani)
-sd_tot = sd(tutti_gaussiani)
-tutti_gaussiani_hist = tutti_gaussiani[tutti_gaussiani>-10 & tutti_gaussiani<10]
-h <- hist(tutti_gaussiani_hist, breaks=200, density = 10,
-          col = "lightgray", xlab = "Accuracy", main = "Overall")
-
-xfit <- seq(min(tutti_gaussiani_hist), max(tutti_gaussiani_hist), length = 40) 
-
-
-yfit <- dt(xfit, df=1) 
-yfit <- dt(xfit)
-yfit <- yfit * diff(h$mids[1:2]) * length(tutti_gaussiani_hist)
-
-lines(xfit, yfit, col = "black", lwd = 2)
-
-########
 
 district_distribution = function (speed_row){
 tutti_gaussiani = tan(speed_row)
@@ -152,11 +134,15 @@ yfit <- yfit * diff(h$mids[1:2]) * length(tutti_gaussiani_hist)
 lines(xfit, yfit, col = "red", lwd = 2)
 return(shapiro.test(speed_row))
 }
-
+ #ex
 district_distribution(speed[[20]])
 
 
 #test sulla media della velocità media nei distretti
+#vengono 15k occorrenze di diverso comportamento, è ragionevole perchè basta per esempio
+#che siano due diversi tipi di comportamento (e.g. 150 per ognuno) e si hanno 30k distretti di comportamento diverso
+#andrà rifatto tutto sui distretti agglomerati ----- son diverse le varianze non sappiamo bene come fare
+
 speed_clean = empty_list
 speed_tutti = NULL
 id = NULL
@@ -168,17 +154,75 @@ for (i in 1:405){
   id = append(id,rep(j,lengths(speed)[i]))
   j=j+1}
 }
-data <- data.frame(speed_tutti, id)
-bartlett.test(speed_clean)  #pd
 
+data <- data.frame(speed_tutti, id)
+bartlett.test(speed_clean)
+id<-as.factor(id)
 attach(data)
 summary(data)
 
 
-fit <- aov( speed_tutti ~ id  )
+fit <- aov( speed_tutti~ id )
 
 summary(fit)
 
+n       <- length(id)      # total number of obs.
+ng      <- table(id)       # number of obs. in each group
+treat   <- levels(id)      # levels of the treatment
+g       <- length(treat)    # number of levels (i.e., of groups)
 
+
+k <- g*(g-1)/2
+
+Media   <- mean(speed_tutti)
+Mediag  <- tapply(speed_tutti, id, mean)
+
+SSres <- sum(residuals(fit)^2)
+
+S <- SSres/(n-g)
+
+alpha=0.05
+
+ICrange=NULL
+for(i in 1:(g-1)) {
+  for(j in (i+1):g) {
+    ICrange=rbind(ICrange,as.numeric(c(Mediag[i]-Mediag[j] - qt(1-alpha/(2*k), n-g) * sqrt( S * ( 1/ng[i] + 1/ng[j] )),
+                                       Mediag[i]-Mediag[j] + qt(1-alpha/(2*k), n-g) * sqrt( S * ( 1/ng[i] + 1/ng[j] )))))
+  }
+}
+
+Auni <- matrix(0,g,g)
+for(i in 1:g) {
+  for(j in i:g) {
+    Auni[i,j] <- Mediag[i]-Mediag[j] + qt(1-alpha/2, n-g) * sqrt( S * ( 1/ng[i] + 1/ng[j] ) )}
+  for(j in 1:i) {
+    Auni[i,j] <- Mediag[j]-Mediag[i] - qt(1-alpha/2, n-g) * sqrt( S * ( 1/ng[i] + 1/ng[j] ) )}
+  Auni[i,i]     <- 0
+}
+P <- matrix(0,g,g)
+for(i in 1:g) {
+  for(j in i:g) {
+    P[i,j] <- (1-pt(abs((Mediag[i]-Mediag[j]) / sqrt( S * ( 1/ng[i] + 1/ng[j] ) ) ), n-g))*2}
+  for(j in 1:i) {
+    P[i,j] <- (1-pt(abs((Mediag[i]-Mediag[j]) / sqrt( S * ( 1/ng[i] + 1/ng[j] ) ) ), n-g))*2}
+  P[i,i]     <- 0
+}
+
+p=NULL
+for (i in 1:321){
+  for (j in 1:321){
+    if (j>i){
+      p =append(p,P[i,j])
+    }
+
+  }
+}
+
+p.bonf <- p.adjust(p, 'bonf') 
+
+alpha = 0.05
+p.bonf_alpha <-p.bonf[which(p.bonf<alpha)]
+alpha = 0.01
+p.bonf_alpha <-p.bonf[which(p.bonf<alpha)]
 
 
