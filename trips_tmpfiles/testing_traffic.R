@@ -1,3 +1,7 @@
+library(leaflet)
+library(sp)
+library(rgdal)
+
 # import data
 df_tracks <- read.table("local_data/df_tracks.txt", header=T)
 
@@ -36,3 +40,19 @@ for (i in seq(31,180)){
   tracks_3_m_daily <- tracks_3_m_daily[!duplicated(tracks_3_m_daily$id),]
   morning[i-30] <- dim(tracks_3_m_daily)[1]
 }
+
+hist(morning, breaks = 20)
+hist ( (morning - mean(morning)) /sd(morning), breaks = 20 )
+plot(morning)
+
+night = rep(0,N)
+# unique:
+for (i in seq(31,180)){
+  tracks_3_n_daily <- tracks_3_night[tracks_3_night$day==i,]
+  tracks_3_n_daily <- tracks_3_n_daily[!duplicated(tracks_3_n_daily$id),]
+  night[i-30] <- dim(tracks_3_n_daily)[1]
+}
+
+hist(night, breaks = 20)
+hist ( (night - mean(night)) /sd(night), breaks = 20 )
+plot(night[1:50])
