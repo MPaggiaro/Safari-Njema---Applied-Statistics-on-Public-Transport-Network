@@ -69,6 +69,7 @@ for (i in seq(31,180)){
   tracks_3_m_daily <- tracks_3_m_daily[!duplicated(tracks_3_m_daily$id),]
   morning[i-30] <- dim(tracks_3_m_daily)[1]
 }
+###
 
 midday = rep(0,N)
 # unique:
