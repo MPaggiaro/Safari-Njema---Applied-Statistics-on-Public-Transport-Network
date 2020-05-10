@@ -54,6 +54,7 @@ add_zones_labels<- function (df_trips_pos, my_map){
 weekly_test <- function(df_trips_district, mondayDay, depZone, startH= 0, endH =24){
   
   N<-7
+  baseday=mondayDay
   pval_mtrx <- matrix(0, N,  N) 
   colnames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
   rownames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
@@ -70,9 +71,84 @@ weekly_test <- function(df_trips_district, mondayDay, depZone, startH= 0, endH =
       df_dist_2 <- df_trips_district[df_trips_district$dep_ID == depZone & df_trips_district$day == baseday + j , 
                                      grep("arr_ID", colnames(df_trips_district))]
       
-      df_pearson <- cbind(day1 = count(df_dist_1)[,2],day2 = count(df_dist_2)[,2])
+      #df_pearson <- cbind(day1 = count(df_dist_1)[,2],day2 = count(df_dist_2)[,2])
+      
+      xx<-count(df_dist_1)
+      yy<-count(df_dist_2)
+      
+      #check frequencies vectors for dimension and order
+      #for xx
+      
+      miss.x<-which(!(zonesID %in% xx$x))
+      add.row.x<- data_frame(x=miss.x, freq=rep(0, length(miss.x)))
+      xx<-rbind(xx, add.row.x)
+      xx<-xx[order(xx$x), ]
+      
+      #for yy
+     
+      miss.y<-which(!(zonesID %in% yy$x))
+      add.row.y<- data_frame(x=miss.y, freq=rep(0, length(miss.y)))
+      yy<-rbind(yy, add.row.y)
+      yy<-yy[order(yy$x), ]
+      
+      
+      df_pearson <- cbind(day1 = xx[,2],day2 = yy[,2])
+      
+      
       #print(df_pearson) 
       result <- chisq.test(df_pearson) 
+      pval_mtrx[i,j+1] <- result$p.value # collecting p_values
+    }
+  }
+  
+  return(pval_mtrx)
+}
+
+#exporting matrix of simulated p values
+weekly_test.sim <- function(df_trips_district, mondayDay, depZone, startH= 0, endH =24){
+  
+  N<-7
+  baseday=mondayDay
+  pval_mtrx <- matrix(0, N,  N) 
+  colnames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
+  rownames(pval_mtrx)<-c("mon", "tue", "wed","thu", "fri", "sat", "sun")
+  
+  #set time slot
+  
+  df_trips_district<- df_trips_district[ df_trips_district$dep_hour >= startH && df_trips_district$dep_hour <= endH ,]
+  
+  
+  for ( i in seq(1,N-1, by=1) ){
+    df_dist_1 <- df_trips_district[df_trips_district$dep_ID == depZone & df_trips_district$day == baseday + i - 1 , 
+                                   grep("arr_ID", colnames(df_trips_district))]
+    for ( j in seq(i,N-1) ){
+      df_dist_2 <- df_trips_district[df_trips_district$dep_ID == depZone & df_trips_district$day == baseday + j , 
+                                     grep("arr_ID", colnames(df_trips_district))]
+      
+      xx<-count(df_dist_1)
+      yy<-count(df_dist_2)
+      
+      #check frequencies vectors for dimension and order
+      #for xx
+      
+      miss.x<-which(!(zonesID %in% xx$x))
+      add.row.x<- data_frame(x=miss.x, freq=rep(0, length(miss.x)))
+      xx<-rbind(xx, add.row.x)
+      xx<-xx[order(xx$x), ]
+      
+      #for yy
+      
+      miss.y<-which(!(zonesID %in% yy$x))
+      add.row.y<- data_frame(x=miss.y, freq=rep(0, length(miss.y)))
+      yy<-rbind(yy, add.row.y)
+      yy<-yy[order(yy$x), ]
+      
+      
+      df_pearson <- cbind(day1 = xx[,2],day2 = yy[,2])
+      
+      #print(df_pearson) 
+      result <- chisq.test(df_pearson, simulate.p.value = TRUE)
+      #print(result)
       pval_mtrx[i,j+1] <- result$p.value # collecting p_values
     }
   }
