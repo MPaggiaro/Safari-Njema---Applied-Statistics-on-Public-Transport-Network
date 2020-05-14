@@ -1,6 +1,6 @@
-source("script/import_data.R", encoding = "UTF-8")
+#source("script/import_data.R", encoding = "UTF-8")
 
-source("script/utility.R", encoding = "UTF-8")
+#source("script/utility.R", encoding = "UTF-8")
 
 
 library(sf)
