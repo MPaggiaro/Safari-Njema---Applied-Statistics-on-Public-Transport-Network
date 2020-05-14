@@ -226,3 +226,72 @@ alpha = 0.01
 p.bonf_alpha <-p.bonf[which(p.bonf<alpha)]
 
 
+######################################################################################################################
+
+find_stopping_perc = function(fascia_oraria, df_tracks, df_trips){
+  
+  df_tracks_fo = df_tracks[which(df_tracks$hour>= fascia_oraria[1] & df_tracks$hour<=fascia_oraria[2]),];
+  
+  a = df_tracks_fo$day*100000+df_tracks_fo$journey_id
+  b = df_trips$day*100000+df_trips$journey_id
+  df_trips = df_trips[ b%in%a, ]
+  
+  
+  stopping_perc=NULL
+  for(i in 1:dim(df_trips)[1])
+  {
+    linked_tracks = trip_to_tracks(df_trips[i,], df_tracks_fo)
+    n_stop = dim(linked_tracks[which(linked_tracks$stop_here == 1 ),])[1]
+    dist = df_trips[i,]$distance
+    stopping_perc = append(stopping_perc, n_stop/dist)
+  }
+  
+  return(stopping_perc)
+}
+
+
+orari = list( c(0,5), c(6,9), c(10,14), c(15,18), c(19,24) )
+
+stperc_05 = find_stopping_perc(orari[[1]], df_tracks, df_trips_pos)
+stperc_69 = find_stopping_perc(orari[[2]], df_tracks, df_trips_pos)
+stperc_1014 = find_stopping_perc(orari[[3]], df_tracks, df_trips_pos)
+stperc_1518 = find_stopping_perc(orari[[4]], df_tracks, df_trips_pos)
+stperc_1924 = find_stopping_perc(orari[[5]], df_tracks, df_trips_pos)
+
+
+log_stperc_05  =log(stperc_05[ stperc_05 < quantile(stperc_05,0.95)[[1]] ])
+log_stperc_69  =log(stperc_05[ stperc_69 < quantile(stperc_69,0.95)[[2]] ])
+log_stperc_1014  =log(stperc_05[ stperc_1014 < quantile(stperc_1014,0.95)[[3]] ])
+log_stperc_1518  =log(stperc_05[ stperc_1518 < quantile(stperc_1518,0.95)[[4]] ])
+log_stperc_1924  =log(stperc_05[ stperc_1924 < quantile(stperc_1924,0.95)[[5]] ])
+
+list(log_stperc_05,log_stperc_69,log_stperc_1014,log_stperc_1518,log_stperc_1924)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
