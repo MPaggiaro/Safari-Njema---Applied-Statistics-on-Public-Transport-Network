@@ -4,6 +4,8 @@ library(rgdal)
 library(plyr)
 source("trips_tmpfiles/functions.R", encoding = "UTF-8")
 
+
+
 #caricare mcshapiro in base alla vostra directory
 load("/Users/maddalenalischetti/Desktop/Applied Stat/Lab 5 - 16042020/mcshapiro.test.RData")
 
