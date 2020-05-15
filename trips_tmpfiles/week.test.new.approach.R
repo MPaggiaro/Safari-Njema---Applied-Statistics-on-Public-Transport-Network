@@ -19,8 +19,6 @@ my_map <- readOGR(
 
 zonesID<-c(1,2,3,4,5)
 
-
-
 df.trips.district<-add_zones_labels(df_trips_pos, my_map)
 
 #remove tripes with non classified arrival or departure points
