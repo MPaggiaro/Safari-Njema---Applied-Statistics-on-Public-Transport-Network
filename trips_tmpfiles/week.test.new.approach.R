@@ -1,5 +1,8 @@
-#settings
+#GOAL: PROVARE con evidenza statistica che tutti i giorni della settimana hanno una stessa distribuzione dei viaggi
+#distribuzione qui intesa come frequenza di partenza da una data zona verso le altre o rimanenti nella stessa
 
+
+#settings
 library(rgdal)
 library(plyr)
 source("trips_tmpfiles/functions.R", encoding = "UTF-8")
@@ -31,7 +34,11 @@ df.trips.district <- df.trips.district[!is.na(df.trips.district$arr_ID),]
 
 df.trips.district.DEP3 <- df.trips.district[df.trips.district$dep_ID == 3,]
 n_tot <- dim(df.trips.district.DEP3)[1] 
+n_tot
 #70830 trips observed departed from 3
+#8804 trips observed departed from 4 (lasciare tutto ugule nei nomi e cambiare il parametro sopra)
+#10564 trips observed departed from 1
+
 
 #APPROACH 1 - MANOVA
 
@@ -42,6 +49,10 @@ tuesday<-seq(35,150, by=7)
 wed<-seq(36,150, by=7)
 thursday<-seq(37,150, by=7)
 friday<-seq(38,150, by=7)
+
+#weekend 
+sat<-seq(39,150, by=7)
+sunday<-seq(40,150, by=7)
 
 #dataframe pof trips divided by week day 
 mon.df<-df.trips.district.DEP3[df.trips.district.DEP3$day %in% monday, ]
@@ -194,11 +205,13 @@ for (i in monday){
  #Fit the model
  
  fit<-manova(as.matrix(week.freq) ~ groups)
- summary.manova(fit, tol=0) # I need to put tol because of an error regarding the rank
+ summary.manova(fit, tol=0) # I need to put tol=0 because of an error regarding the rank :"i residui hanno rango 4 <5 "
  summary.manova(fit, test="Wilks", tol = 0)
  
- ###high Pval---> accept the HO : same distribution
  
+ ###high Pval---> accept the HO : same distribution ( even from DEP 4 p val =0.89)
+ 
+ summary.aov(fit)
  
  #Check assumptions
  
@@ -221,6 +234,9 @@ for (i in monday){
  pval
  #gaussianity abbastanza ok tranne per il primo gruppo, forse da rivedere mangari lavorando con outliers
  
+ # DEP==4 gaussinità ok per tutti i gruppi
+ # DEP== 1 gaussinità ok (solo strano warning in mcshapiro.test)
+ 
  #2)
  S1<-cov(week.freq[iM, ])
  S2<-cov(week.freq[iT, ])
@@ -238,12 +254,105 @@ for (i in monday){
  
  #per me accettabile!!
  
+# DEP==4 covarianza boh
+# DEP== 1 covarianza boh
+ 
+ 
+ 
+#GOAL 2: Provare a vedere se  i weekend (sab e domanica) hanno la stessa distribuzione di traffico 
+ 
+#in this case p>= 1 and g=2
 
+ #Create dataset:  
+ 
+ weekEND<-data.frame( 10, 10,10,10,10, NA)
+ colnames(weekEND)<-c(zonesID, "day")
+ p<-5
+ g<-2
+ 
+ n1< length(sat)
+ n2<- length(sunday)
+ for (i in sat){
+    
+    freq.i<-df.trips.district.DEP3[df.trips.district.DEP3$day==i, grep("arr_ID", colnames(df.trips.district))]
+    freq.df<-count(freq.i)
+    
+    #check frequencies vectors for dimension and order (i.e. in case some arrival ID are not considered add 0)
+    # nb: se sono tutti present non aggiunge ninete!!
+    ##------------------------------------------------
+    miss.x<-which(!(zonesID %in% freq.df$x))
+    add.row.x<- data.frame(x=miss.x, freq=rep(0, length(miss.x)))
+    freq.df<-rbind(freq.df, add.row.x)
+    freq.df<-freq.df[order(freq.df$x), ]
+    
+    ##-----------------------------------------------
+    
+    #Calcolo vettore di frequenze rel ~ distribione degli arrivi dalla zona nel giorno i
+    freq.df$freq<-freq.df$freq/sum(freq.df$freq)
+    weekEND<-rbind(weekEND, c(as.numeric(freq.df$freq), 'Sat'))
+ }
+ 
+ #sistemo la matrice week che contiene il dataset multivariato per fare l'anova
+ 
+ weekEND<-weekEND[!is.na(weekEND[, 6]),] 
+ 
+ for (i in sunday){
+    
+    freq.i<-df.trips.district.DEP3[df.trips.district.DEP3$day==i, grep("arr_ID", colnames(df.trips.district))]
+    freq.df<-count(freq.i)
+    
+    #check frequencies vectors for dimension and order (i.e. in case some arrival ID are not considered add 0)
+    # nb: se sono tutti present non aggiunge ninete!!
+    ##------------------------------------------------
+    miss.x<-which(!(zonesID %in% freq.df$x))
+    add.row.x<- data.frame(x=miss.x, freq=rep(0, length(miss.x)))
+    freq.df<-rbind(freq.df, add.row.x)
+    freq.df<-freq.df[order(freq.df$x), ]
+    
+    ##-----------------------------------------------
+    
+    #Calcolo vettore di frequenze rel ~ distribione degli arrivi dalla zona nel giorno i
+    freq.df$freq<-freq.df$freq/sum(freq.df$freq)
+    
+    weekEND<-rbind(weekEND, c(as.numeric(freq.df$freq), 'Sun') )
+ }
+ 
+ weekEND[,'1'] <- as.numeric(as.character(weekEND[,'1']))
+ weekEND[,'2'] <- as.numeric(as.character(weekEND[,'2']))
+ weekEND[,'3'] <- as.numeric(as.character(weekEND[,'3']))
+ weekEND[,'4'] <- as.numeric(as.character(weekEND[,'4']))
+ weekEND[,'5'] <- as.numeric(as.character(weekEND[,'5']))
 
  
+ iSat <- which(weekEND[,6]=='Sat' )
+ iSUN <- which(weekEND[, 6]=='Sun' )
  
+ n1<- length(sat)
+ n2<- length(sunday)
  
+ S1<-cov(weekEND[iSat,1:5])
+ S2<-cov(weekEND[iSUN,1:5])
  
+ Spooled<- ((n1-1)*S1 + (n2-1)*S2)/(n1+n2-2)
+ inv.Spooled<-solve(Spooled, tol=0) # attenzione sarebbe numericamente singolare= valore di condizione di reciprocità = 1.36748e-17
+
+ delta.0<- c(0,0,0,0,0)
+ alpha<-0.5
  
+ m1<-colMeans(weekEND[iSat,1:5])
+ m2<-colMeans(weekEND[iSUN,1:5])
  
+ T2<- (1/n1 + 1/n2)*(m1-m2)%*%inv.Spooled%*%(m1-m2)
+ 
+ cfr.fisher<- (n1+n2-2)/(n1+n2-1-p)*qf(alpha, p, n1+n2-1-p)
+ 
+ #regect?
+ T2 > cfr.fisher #no stat evidene to reject
+ 
+ pval<- 1- pf(T2, p, n1+n2-1-p )
+ pval #very large
+ 
+#They are the same !! 
+ 
+#NB: check for singularity and indepeendence assumption
  
