@@ -65,6 +65,7 @@ frid.df<-df.trips.district.DEP3[df.trips.district.DEP3$day %in% friday, ]
 # alla zona di arrivo)
 
 week<-data.frame( 10, 10, 10, 10, 10, NA)
+
 colnames(week)<-c(zonesID, "day")
 for (i in monday){
   
@@ -89,6 +90,7 @@ for (i in monday){
 #sistemo la matrice week che contiene il dataset multivariato per fare l'anova
  
  week<-week[!is.na(week[, 6]),] 
+ 
  
  for (i in tuesday){
    
@@ -184,8 +186,8 @@ for (i in monday){
  week[,'5'] <- as.numeric(as.character(week[,'5']))
  
  
-
-
+#TOLGO LA DIPENDEZA LINEARE
+week<- week[ , c(1,2,4,5,6)]
  
  # Model I'd like to fit: one-factor MANOVA
  ##Two-ways MANOVA (complete model with interaction)
@@ -193,20 +195,20 @@ for (i in monday){
  #i=1, ..5 (g=5)
  
  
- g<-5
+ g<-4
  p<-5
  n<-dim(week)[1] #150 observation
  
- week.freq<-week[, c(1,2,3,4,5)]
- week.groups<-week[, 6]
+ week.freq<-week[, c(1,2,3,4)]
+ week.groups<-week[, 5]
  groups <- factor(week.groups, labels = c('M', 'T', 'W', 'Th', 'F')) # Treat.1
  levels(groups)
  
  #Fit the model
  
  fit<-manova(as.matrix(week.freq) ~ groups)
- summary.manova(fit, tol=0) # I need to put tol=0 because of an error regarding the rank :"i residui hanno rango 4 <5 "
- summary.manova(fit, test="Wilks", tol = 0)
+ summary.manova(fit) # I need to put tol=0 because of an error regarding the rank :"i residui hanno rango 4 <5 "
+ summary.manova(fit, test="Wilks")
  
  
  ###high Pval---> accept the HO : same distribution ( even from DEP 4 p val =0.89)
