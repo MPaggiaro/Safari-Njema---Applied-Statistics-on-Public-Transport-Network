@@ -5,9 +5,10 @@
 #settings
 library(rgdal)
 library(plyr)
+library(rgr)
 source("trips_tmpfiles/functions.R", encoding = "UTF-8")
 
-
+install.packages("rgr")
 
 #caricare mcshapiro in base alla vostra directory
 load("/Users/maddalenalischetti/Desktop/Applied Stat/Lab 5 - 16042020/mcshapiro.test.RData")
@@ -259,9 +260,56 @@ week<- week[ , c(1,2,4,5,6)]
 # DEP==4 covarianza boh
 # DEP== 1 covarianza boh
  
+# Trasformazione logit del dataset per avere dati gaussiani:
+ logit.week <- week
+ logit.week$`1`<- logit(week$`1`)
+ logit.week$`2`<- logit(week$`2`)
+ logit.week$`5`<- logit(week$`5`)
+ logit.week$`4`<- logit(week$`4`)
+ # perchè tutti negativi?
+ 
+ plot(logit.week$`1`)
+ plot(logit.week$`5`)
+ x11()
+ qqnorm(logit.week$`1`)
+ qqline(logit.week$`1`)
+ 
+ x11()
+ qqnorm(logit.week$`5`)
+ qqline(logit.week$`5`)
+ 
+ x11()
+ qqnorm(week$`5`)
+ qqline(week$`5`)
+ 
+ week.freq<-logit.week[, c(1,2,3,4)]
+ week.groups<-week[, 5]
+ groups <- factor(week.groups, labels = c('M', 'T', 'W', 'Th', 'F')) # Treat.1
+ levels(groups)
+ 
+ #Fit the model
+ 
+ fit<-manova(as.matrix(week.freq) ~ groups)
+ summary.manova(fit) # I need to put tol=0 because of an error regarding the rank :"i residui hanno rango 4 <5 "
+ summary.manova(fit, test="Wilks")
  
  
-#GOAL 2: Provare a vedere se  i weekend (sab e domanica) hanno la stessa distribuzione di traffico 
+ ###high Pval---> accept the HO : same distribution ( even from DEP 4 p val =0.89)
+ 
+ summary.aov(fit)
+ 
+ #a) gaussinity
+ 
+ #1)
+ logit.pval<-c(mcshapiro.test(week.freq[iM, ])$p, 
+         mcshapiro.test(week.freq[iT, ])$p, 
+         mcshapiro.test(week.freq[iW, ])$p, 
+         mcshapiro.test(week.freq[iTh, ])$p, 
+         mcshapiro.test(week.freq[iF, ])$p)
+ 
+ pval
+ logit.pval
+ #GOAL 2: Provare a vedere se  i weekend (sab e domanica) hanno la stessa distribuzione di traffico 
  
 #in this case p>= 1 and g=2
 
