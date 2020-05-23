@@ -29,6 +29,7 @@ df_tracks <- cbind(df_tracks, c(district))
 
 # selection of zone 3:
 tracks_3 <- df_tracks[df_tracks$Zone_ID == 3,]
+tracks_3 <- tracks_3[!is.na(tracks_3$Zone_ID),]
 
 # over the days, count:
 tracks_3_night <- tracks_3[tracks_3$hour <= 5,]
