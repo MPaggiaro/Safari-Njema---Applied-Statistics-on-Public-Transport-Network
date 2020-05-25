@@ -8,7 +8,7 @@ library(plyr)
 library(rgr)
 source("trips_tmpfiles/functions.R", encoding = "UTF-8")
 
-install.packages("rgr")
+#install.packages("rgr")
 
 #caricare mcshapiro in base alla vostra directory
 load("/Users/maddalenalischetti/Desktop/Applied Stat/Lab 5 - 16042020/mcshapiro.test.RData")
@@ -90,7 +90,7 @@ for (i in monday){
 
 #sistemo la matrice week che contiene il dataset multivariato per fare l'anova
  
- week<-week[!is.na(week[, 6]),] 
+ 
  
  
  for (i in tuesday){
@@ -187,8 +187,10 @@ for (i in monday){
  week[,'5'] <- as.numeric(as.character(week[,'5']))
  
  
+ week<-week[-1, ]
+ 
 #TOLGO LA DIPENDEZA LINEARE
-week<- week[ , c(1,2,4,5,6)]
+###################################################################################################################
  
  # Model I'd like to fit: one-factor MANOVA
  ##Two-ways MANOVA (complete model with interaction)
@@ -201,7 +203,7 @@ week<- week[ , c(1,2,4,5,6)]
  n<-dim(week)[1] #150 observation
  
  week.freq<-week[, c(1,2,3,4)]
- week.groups<-week[, 5]
+ week.groups<-week[, 6]
  groups <- factor(week.groups, labels = c('M', 'T', 'W', 'Th', 'F')) # Treat.1
  levels(groups)
  
@@ -235,17 +237,107 @@ week<- week[ , c(1,2,4,5,6)]
          mcshapiro.test(week.freq[iF, ])$p)
  
  pval
- #gaussianity abbastanza ok tranne per il primo gruppo, forse da rivedere mangari lavorando con outliers
  
- # DEP==4 gaussinità ok per tutti i gruppi
- # DEP== 1 gaussinità ok (solo strano warning in mcshapiro.test)
+ #NO gaussianity 
  
- #2)
- S1<-cov(week.freq[iM, ])
- S2<-cov(week.freq[iT, ])
- S3<-cov(week.freq[iW, ])
- S4 <-cov(week.freq[iTh, ])
- S5<-cov(week.freq[iF, ])
+ 
+######################################################################################################################
+# Trasformazione logit del dataset per avere dati gaussiani:
+ logit.week <- week
+ logit.week$`1`<- logit(week$`1`)
+ logit.week$`2`<- logit(week$`2`)
+ logit.week$`3`<- logit(week$`3`)
+ logit.week$`5`<- logit(week$`5`)
+ logit.week$`4`<- logit(week$`4`)
+ 
+ #no arrivi in 3 (per non avere dipendeza lineare)
+ 
+ logit.week.freq<-logit.week[ , c(1,2,4,5,6)]
+
+ 
+ #a) gaussinity
+ 
+ logit.pval<-c(mcshapiro.test(logit.week.freq[logit.week.freq$day=='M', 1:4 ])$p, 
+         mcshapiro.test(logit.week.freq[logit.week.freq$day=='T', 1:4 ])$p, 
+         mcshapiro.test(logit.week.freq[logit.week.freq$day=='W', 1:4 ])$p, 
+         mcshapiro.test(logit.week.freq[logit.week.freq$day=='Th', 1:4 ])$p, 
+         mcshapiro.test(logit.week.freq[logit.week.freq$day=='F', 1:4 ])$p)
+
+ logit.pval
+ 
+ #prova outilier su MONDAY
+ x11()
+ plot(logit.week.freq[logit.week.freq$day=='M', 1:4 ])
+ 
+ n<-dim(logit.week.freq[logit.week.freq$day=='M', 1:4 ])[1]
+ n
+ mon<-logit.week.freq[logit.week.freq$day=='M', 1:4 ]
+ 
+ mon<-mon[mon$`1` <(-2.2) | mon$`2` < (-2.4), ]
+ n<-dim(mon)[1]
+ n
+ 
+ x11()
+ plot(mon)
+ mcshapiro.test(mon)$p #---OK gaussinity 
+ 
+ # set correct index in original logit dataset: 
+ mon<-logit.week.freq[logit.week.freq$day=='M', 1:4 ]
+ idx.out.mon<-which(mon$`1` >(-2.2) & mon$`2` > (-2.4))
+ idx.out.mon
+ 
+ logit.week.freq<-logit.week.freq[ -idx.out.mon , ]
+
+ 
+ #prova outilier su FRIDAY
+ 
+ x11()
+ plot(logit.week.freq[logit.week.freq$day=='F', 1:4 ])
+ 
+ n<-dim(logit.week.freq[logit.week.freq$day=='F', 1:4 ])[1]
+ n
+ fri<-logit.week.freq[logit.week.freq$day=='F', 1:4 ]
+ 
+ fri<-fri[fri$`2` > (-3.1), ]
+ n<-dim(fri)[1]
+ n
+ 
+ x11()
+ plot(fri)
+ mcshapiro.test(fri)$p #---OK gaussinity 
+ 
+ 
+ # set correct index in dataset: 
+ fri<-logit.week.freq[logit.week.freq$day=='F', 1:4 ]
+ idx.out.fri<-which(fri$`2` < (-3.1))
+ idx.out.fri
+ 
+ #reset whole indexes
+ idx.out.fri <- idx.out.fri + (which(logit.week.freq$day=='F')[1] -1)
+ idx.out.fri
+ logit.week.freq<-logit.week.freq[ -idx.out.fri , ]
+ 
+ 
+ #chech gaussinity of the groups now: 
+ 
+ logit.pval.new<-c(mcshapiro.test(logit.week.freq[logit.week.freq$day=='M', 1:4 ])$p, 
+               mcshapiro.test(logit.week.freq[logit.week.freq$day=='T', 1:4 ])$p, 
+               mcshapiro.test(logit.week.freq[logit.week.freq$day=='W', 1:4 ])$p, 
+               mcshapiro.test(logit.week.freq[logit.week.freq$day=='Th', 1:4 ])$p, 
+               mcshapiro.test(logit.week.freq[logit.week.freq$day=='F', 1:4 ])$p)
+ 
+ logit.pval.new
+ logit.pval
+ 
+ #OK we obtain gaussiniity in the groups!!
+ 
+ #b) variance homogeneity : NO EQUAL VARIANCES
+ 
+ S1<-cov(logit.week.freq[logit.week.freq$day=='M', 1:4 ])
+ S2<-cov(logit.week.freq[logit.week.freq$day=='T', 1:4 ])
+ S3<-cov(logit.week.freq[logit.week.freq$day=='W', 1:4 ])
+ S4 <-cov(logit.week.freq[logit.week.freq$day=='Th', 1:4 ])
+ S5<-cov(logit.week.freq[logit.week.freq$day=='F', 1:4 ])
  
  x11()
  par(mfrow= c(3,2))
@@ -255,61 +347,30 @@ week<- week[ , c(1,2,4,5,6)]
  image(S4, col=heat.colors(100), asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2,S3), (0:100)/100, na.rm=TRUE))
  image(S5, col=heat.colors(100), asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2,S3), (0:100)/100, na.rm=TRUE))
  
- #per me accettabile!!
+ #Fit the model
  
-# DEP==4 covarianza boh
-# DEP== 1 covarianza boh
- 
-# Trasformazione logit del dataset per avere dati gaussiani:
- logit.week <- week
- logit.week$`1`<- logit(week$`1`)
- logit.week$`2`<- logit(week$`2`)
- logit.week$`5`<- logit(week$`5`)
- logit.week$`4`<- logit(week$`4`)
- # perchè tutti negativi?
- 
- plot(logit.week$`1`)
- plot(logit.week$`5`)
- x11()
- qqnorm(logit.week$`1`)
- qqline(logit.week$`1`)
- 
- x11()
- qqnorm(logit.week$`5`)
- qqline(logit.week$`5`)
- 
- x11()
- qqnorm(week$`5`)
- qqline(week$`5`)
- 
- week.freq<-logit.week[, c(1,2,3,4)]
- week.groups<-week[, 5]
+ week.groups<-logit.week.freq[, 5]
  groups <- factor(week.groups, labels = c('M', 'T', 'W', 'Th', 'F')) # Treat.1
  levels(groups)
  
- #Fit the model
  
- fit<-manova(as.matrix(week.freq) ~ groups)
- summary.manova(fit) # I need to put tol=0 because of an error regarding the rank :"i residui hanno rango 4 <5 "
- summary.manova(fit, test="Wilks")
- 
- 
- ###high Pval---> accept the HO : same distribution ( even from DEP 4 p val =0.89)
+ fit<-manova(as.matrix(logit.week.freq[, 1:4]) ~ groups)
+ summary.manova(fit) 
+ summary.manova(fit, test="Wilks") 
  
  summary.aov(fit)
  
- #a) gaussinity
+ ###high Pval---> accept the HO : same distribution (Wilks  p val =0.9)
  
- #1)
- logit.pval<-c(mcshapiro.test(week.freq[iM, ])$p, 
-         mcshapiro.test(week.freq[iT, ])$p, 
-         mcshapiro.test(week.freq[iW, ])$p, 
-         mcshapiro.test(week.freq[iTh, ])$p, 
-         mcshapiro.test(week.freq[iF, ])$p)
  
- pval
- logit.pval
- #GOAL 2: Provare a vedere se  i weekend (sab e domanica) hanno la stessa distribuzione di traffico 
+#############################################################################################
+ 
+ #####                  WEEKEND COMPARISON (SATURDAYS AND SUNDAYS)               ############
+ 
+#############################################################################################
+ 
+ 
+#GOAL 2: Provare a vedere se  i weekend (sab e domanica) hanno la stessa distribuzione di traffico 
  
 #in this case p>= 1 and g=2
 
@@ -380,17 +441,20 @@ week<- week[ , c(1,2,4,5,6)]
  n1<- length(sat)
  n2<- length(sunday)
  
- S1<-cov(weekEND[iSat,1:5])
- S2<-cov(weekEND[iSUN,1:5])
+ 
+ #take only 4 frequencies ( get rid of the 5th one, whihch is linear dependent)
+ cols<-c(2,3,4,5)
+ S1<-cov(weekEND[iSat,cols])
+ S2<-cov(weekEND[iSUN,cols])
  
  Spooled<- ((n1-1)*S1 + (n2-1)*S2)/(n1+n2-2)
- inv.Spooled<-solve(Spooled, tol=0) # attenzione sarebbe numericamente singolare= valore di condizione di reciprocità = 1.36748e-17
+ inv.Spooled<-solve(Spooled) 
 
- delta.0<- c(0,0,0,0,0)
+ delta.0<- c(0,0,0,0)
  alpha<-0.5
  
- m1<-colMeans(weekEND[iSat,1:5])
- m2<-colMeans(weekEND[iSUN,1:5])
+ m1<-colMeans(weekEND[iSat,cols])
+ m2<-colMeans(weekEND[iSUN,cols])
  
  T2<- (1/n1 + 1/n2)*(m1-m2)%*%inv.Spooled%*%(m1-m2)
  
@@ -400,9 +464,34 @@ week<- week[ , c(1,2,4,5,6)]
  T2 > cfr.fisher #no stat evidene to reject
  
  pval<- 1- pf(T2, p, n1+n2-1-p )
- pval #very large
+ pval #very large : H0= equal distribution
  
 #They are the same !! 
  
-#NB: check for singularity and indepeendence assumption
+#check assumptions on gaussianity and covariance
+
+ # GAUSSIANITY:  
+pval<-c(mcshapiro.test(weekEND[iSat,cols])$p,
+        mcshapiro.test(weekEND[iSUN,cols])$p )
+
+pval #ottimo, sembra gaussiano
+
+#plotto i dati per vedere la nuvola, e non strana dipendenza --> sembra ok
+
+x11()
+plot(weekEND[iSat,cols])
+x11()
+plot(weekEND[iSUN,cols])
+
+#VARIANCE HOMOGENEITY
+x11()
+par(mfrow= c(1, 2))
+image(S1, col=heat.colors(100),main='Cov. S1', asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2,S3), (0:100)/100, na.rm=TRUE))
+image(S2, col=heat.colors(100),main='Cov. S2', asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2,S3), (0:100)/100, na.rm=TRUE))
+
+#non proprio, forse accettabile?
+
+#Non abbiamo per niente un large sample, quindi non possiamo usare il risultato asintotitco!
+
+ 
  
