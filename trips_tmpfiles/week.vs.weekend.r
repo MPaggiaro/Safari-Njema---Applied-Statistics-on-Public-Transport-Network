@@ -238,17 +238,17 @@ isWeekday <- which(week[,6]!='Sat' & week[, 6]!='Sun' )
 n1<- length(isWeekday)
 n2<- length(isWeekend)
 
-S1<-cov(week[isWeekday,1:5])
-S2<-cov(week[isWeekend,1:5])
+S1<-cov(week[isWeekday,1:4])
+S2<-cov(week[isWeekend,1:4])
 
 Spooled<- ((n1-1)*S1 + (n2-1)*S2)/(n1+n2-2)
-inv.Spooled<-solve(Spooled, tol=0) 
+inv.Spooled<-solve(Spooled) 
 
-delta.0<- c(0,0,0,0,0)
+delta.0<- c(0,0,0,0)
 alpha<-0.5
 
-m1<-colMeans(week[isWeekday,1:5])
-m2<-colMeans(week[isWeekend,1:5])
+m1<-colMeans(week[isWeekday,1:4])
+m2<-colMeans(week[isWeekend,1:4])
 
 T2<- (1/n1 + 1/n2)*(m1-m2)%*%inv.Spooled%*%(m1-m2)
 
@@ -263,4 +263,8 @@ pval #very large
 # the city is the same every day. Pay attention that this analysis refers
 # to the relative traffic: in absolute values (i.e. number of people moving
 # per day around the city) there are evident differences between weekend
-# and weekdays.
+# and weekdays.ù
+
+# next steps:
+# - clustering dei punti di interesse
+# - traffico assoluto
