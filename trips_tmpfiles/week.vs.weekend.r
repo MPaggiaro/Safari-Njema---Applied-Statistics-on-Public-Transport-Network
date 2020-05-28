@@ -265,6 +265,32 @@ pval #very large
 # per day around the city) there are evident differences between weekend
 # and weekdays.ù
 
+# Checking validity of the test:
+# 1) Gaussianity:
+pval<-c(mcshapiro.test(week[isWeekday,1:4])$p,
+        mcshapiro.test(week[isWeekend,1:4])$p )
+
+pval 
+# qualche outlier di weekdays sballa il p value, piccolo
+# basta togliere il singolo outlier per far tornare il risultato del
+# test positivo.
+
+# La gaussianità si vede chiaramente anche dai grafici (weekday bellissimo)
+x11()
+plot(week[isWeekday,1:4])
+x11()
+plot(week[isWeekend,1:4])
+
+# 2) Homoschedasticity:
+x11()
+par(mfrow= c(1, 2))
+image(S1, col=heat.colors(100),main='Cov. S1', asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2), (0:100)/100, na.rm=TRUE))
+image(S2, col=heat.colors(100),main='Cov. S2', asp=1, axes = FALSE, breaks = quantile(rbind(S1,S2), (0:100)/100, na.rm=TRUE))
+
+# le covarianze sono molto simili, dal grafico si evince la loro somiglianza.
+
+# Conclusione: assunzioni di Gaussianità e Omoschedasticità rispettate.
+
 # next steps:
 # - clustering dei punti di interesse
 # - traffico assoluto
