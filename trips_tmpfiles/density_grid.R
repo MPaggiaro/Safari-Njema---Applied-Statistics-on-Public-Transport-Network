@@ -2,8 +2,8 @@
 # SCRIPT: recognizing the zones with higher density
 ######################################################
 
-# setwd("/Users/pietro/Documents/appstat_project")
-# rm(list = ls()) #cleaning environment
+#setwd("/Users/pietro/Documents/appstat_project")
+#rm(list = ls()) #cleaning environment
 
 library(leaflet)
 library(sf)
@@ -54,15 +54,18 @@ elems <- df_tracks[which(!is.na(localize_df$Zone_ID)),]
 # points(elems$lat ~ elems$lng, col = "red", cex = 1.5)
 
 # defining the extrema of area
-max_N <- max(elems$Northing)
-min_N <- min(elems$Northing)
-max_E <- max(elems$Easting)
-min_E <- min(elems$Easting)
+max_N <- max(elems$Northing) #7144545.304695
+min_N <- min(elems$Northing) #7125984.666428
+max_E <- max(elems$Easting) #467373.5634700
+min_E <- min(elems$Easting) #452064.7329486
+
+
+
 
 # dividing the rectangle just found in a grid
 
-grid_h <- 100 #number of intervals in horizontal (i.e. number of columns in the grid)
-grid_v <- 100 #number of intervals in vertical (i.e. number of rows in the grid)
+grid_h <- 40 #number of intervals in horizontal (i.e. number of columns in the grid)
+grid_v <- 40 #number of intervals in vertical (i.e. number of rows in the grid)
 
 vec_h <- seq(min_E, max_E+0.1, length.out = grid_h+1) #ordino da sinistra a destra
 vec_v <- seq(max_N, min_N-0.1, length.out = grid_v+1) #ordino dall'alto in basso
@@ -102,8 +105,17 @@ for ( i in 1:dim(elems)[1] ) {
 which(is.na(n_colonna))
 which(is.na(n_riga))
 
+# reverting density grid
+rotated_map <- matrix(0L, nrow = grid_h, ncol=grid_v, )
+for ( i in 1:grid_h){
+  tmp <- density_grid[,i]
+  for ( j in 1:grid_v)
+    rotated_map[i, j] <- tmp[grid_v + 1 -j]
+}
+
 #plotting matrix
 image(density_grid)
+image(rotated_map)
 
 #identifying the zone on the map
 {
@@ -124,4 +136,5 @@ leaflet(data = df) %>% addTiles() %>%
 }
 
 ### NB: poi prova con VARIAZIONE alla riga 51
+#dev.off()
 
