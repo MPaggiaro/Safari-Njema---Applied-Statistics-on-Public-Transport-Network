@@ -103,7 +103,7 @@ dummy_stop <- ifelse( max_list<=4, 1, 0 )
 
 detach(df_new)
 
-h <- ifelse( df_new$dep_hour < 6 , 1, 0)
+h <- ifelse( df_new$dep_hour > 12 & df_new$dep_hour<17 , 1, 0)
 df_new <- cbind(df_new_archive, n_stop = dummy_stop, d_stop = stop_dur, slow = lento, h = h)
 
 attach(df_new)
@@ -113,11 +113,9 @@ attach(df_new)
 #             d_stop:n_stop + I(n_stop^2) )
 #summary(fit3)
 
-fit3 = lm( duration ~ distance + n_stop + d_stop + slow + distance:n_stop + 
-             d_stop:n_stop + distance:d_stop + distance:slow + n_stop:slow)
 
-fit3 = lm( duration ~ distance + h + n_stop + d_stop + distance:n_stop + 
-             d_stop:n_stop + distance:d_stop + distance:slow + h:distance)
+fit3 = lm( duration ~ distance + h + d_stop +  distance:d_stop + distance:h +
+             d_stop:n_stop + distance:slow + h:distance)
 
 print ( summary(fit3) )
 
