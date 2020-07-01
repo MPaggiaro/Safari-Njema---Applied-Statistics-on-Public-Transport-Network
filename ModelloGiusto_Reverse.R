@@ -14,6 +14,21 @@ if (!exists("df_trips_pos")){
   df_trips_pos <- read.table("local_data/df_trips_pos.txt", header=T)
 }
 
+### 
+
+hom_div_areas <- readOGR( 
+  dsn= paste0(getwd(),"/HomogenousDivisionOK") , 
+  layer="HomogenousDivisionOK",
+  verbose=FALSE
+)
+
+points <- data.frame( east = df_trips_pos$dep_east, north = df_trips_pos$dep_north )
+coordinates(points) <- ~ east + north
+proj4string(points) <- proj4string(hom_div_areas)
+
+districts_fid <- over(points,hom_div_areas)[,1]
+
+
 #loading map
 my_map <- readOGR( 
   dsn= paste0(getwd(),"/trips_tmpfiles/shp_files") , 
@@ -22,34 +37,19 @@ my_map <- readOGR(
 )
 
 
-
 ## plotting the map
 par(mar=c(0,0,0,0))
 plot(my_map, col="#f2f2f2", bg="skyblue", lwd=0.25, border=1 )
 
-
-dat <- data.frame( Longitude=df_trips_pos$dep_lng, Latitude=df_trips_pos$dep_lat )
+dat <- data.frame( Longitude=df_trips_pos$arr_lng, Latitude=df_trips_pos$arr_lat )
 coordinates(dat) <- ~ Longitude + Latitude
 proj4string(dat) <- proj4string(my_map)
 
 # cercare dove sono i punti
 localize_df <- over(dat,my_map)
-elems <- df_trips_pos[which(localize_df$Zone_ID == 3 ),]
+localize_df <- cbind(localize_df, districts_fid)
+df_new <- df_trips_pos[which(localize_df$Zone_ID == 3 & localize_df$districts_fid == 33 ),]
 
-
-hom_div_areas<- readOGR( 
-  dsn= paste0(getwd(),"/HomogenousDivisionOK") , 
-  layer="HomogenousDivisionOK",
-  verbose=FALSE
-)
-
-points <- data.frame( east=elems$arr_east, north=elems$arr_north )
-coordinates(points) <- ~ east + north
-proj4string(points) <- proj4string(hom_div_areas)
-
-district <- over(points,hom_div_areas)
-df_trips_districts <- cbind(elems, c(district))
-df_new = df_trips_districts[ which(df_trips_districts$fid == 33), ]
 
 #max( df_trips_districts[(!is.na(df_trips_districts$fid)),22] )
 
@@ -100,7 +100,6 @@ for ( i in (1:dim(df_new)[1]) ){
 
 lento <- ifelse( avg_speed<=2.5, 1, 0 )
 dummy_stop <- ifelse( max_list<=4, 1, 0 )
-#hol <- ifelse(df_new$day>dd,1,0)
 
 detach(df_new)
 
@@ -115,7 +114,7 @@ attach(df_new)
 #summary(fit3)
 
 fit3 = lm( duration ~ distance + n_stop + d_stop + slow + distance:n_stop + 
-                         d_stop:n_stop + distance:d_stop + distance:slow + n_stop:slow)
+             d_stop:n_stop + distance:d_stop + distance:slow + n_stop:slow)
 
 fit3 = lm( duration ~ distance + h + n_stop + d_stop + distance:n_stop + 
              d_stop:n_stop + distance:d_stop + distance:slow + h:distance)
