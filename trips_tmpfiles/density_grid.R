@@ -62,6 +62,8 @@ min_E <- min(elems$Easting) #452064.7329486
 
 
 
+
+
 # dividing the rectangle just found in a grid
 
 grid_h <- 40 #number of intervals in horizontal (i.e. number of columns in the grid)
@@ -118,7 +120,7 @@ image(density_grid)
 image(rotated_map)
 
 #identifying the zone on the map
-{
+
 max_lat <- elems[elems$Northing == max_N,]$lat[1]
 min_lat <- elems[elems$Northing == min_N,]$lat[1]
 max_lng <- elems[elems$Easting == max_E,]$lng[1]
@@ -130,11 +132,58 @@ vertici <- data.frame( my_lat = c(max_lat,max_lat,min_lat, min_lat),
 
 df <- data.frame( my_lat = vertici$my_lat, my_lng = vertici$my_lng)
 
-leaflet(data = df) %>% addTiles() %>%
-  addProviderTiles(providers$OpenStreetMap)  %>% 
-  addCircleMarkers(~df$my_lng, ~df$my_lat)
+
+
+#############################################
+# Disegno i quadratini sulla mappa
+#############################################
+
+
+# funzione per trovare le coordineate di un un quadratino sulla matrice rotated_map
+squareCoords = function(i,j,gridmap,max_N,min_N,max_E,min_E,n){
+  N_step = (max_N - min_N)/n
+  E_step = (max_E - min_E)/n
+  
+  N_min_square = min_N+N_step*(i-1)
+  N_max_square = min_N+N_step*i
+  E_min_square = min_E+E_step*(j-1)
+  E_max_square = min_E+E_step*j
+  
+  NO=data.frame(E=E_min_square,N=N_max_square)
+  NE=data.frame(E=E_max_square,N=N_max_square)
+  SO=data.frame(E=E_min_square,N=N_min_square)
+  SE=data.frame(E=E_max_square,N=N_min_square)
+  tutti=rbind(NO,NE,SO,SE)
+  sputm <- SpatialPoints(tutti, proj4string=CRS("+proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs+ellps+WGS84+towgs84=0,0,0"))  
+  spgeo <- data.frame(spTransform(sputm, CRS("+proj=longlat +datum=WGS84")))
+  longlat = 
+    colnames(spgeo)=c("lng","lat")
+  return(spgeo)
+  
 }
 
-### NB: poi prova con VARIAZIONE alla riga 51
-#dev.off()
+# vettori contenenti i vertici dei quadratini
+vec_min_lng = NULL
+vec_max_lng = NULL
+vec_min_lat = NULL
+vec_max_lat = NULL
+palette = NULL
+
+# riempio i vettori e creo la palette di colori
+pal=colorRampPalette(colors = c("green","yellow","red"))(max(rotated_map)+1)
+for(i in 1:40){
+  for(j in 1:40){
+    sqcoord = squareCoords(i,j,rotated_map,max_N,min_N,max_E,min_E,40)
+    vec_min_lng = c(vec_min_lng, min(sqcoord$lng))
+    vec_max_lng = c(vec_max_lng, max(sqcoord$lng))
+    vec_min_lat = c(vec_min_lat, min(sqcoord$lat))
+    vec_max_lat = c(vec_max_lat, max(sqcoord$lat))
+    palette = c(palette, pal[rotated_map[i,j]+1])
+  }
+}
+
+# piazzo i rettangolini sulla mappa per creare una sorta di heatmap
+mappa = leaflet(data = df) %>%addTiles()%>%addProviderTiles(providers$OpenStreetMap)%>%addRectangles(lng1 = vec_min_lng, lng2 = vec_max_lng, lat1 = vec_min_lat, lat2 = vec_max_lat, color = palette)
+mappa%>%addCircleMarkers(~df$my_lng, ~df$my_lat)
+
 
