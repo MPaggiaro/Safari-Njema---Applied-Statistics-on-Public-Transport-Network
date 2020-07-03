@@ -7,6 +7,21 @@ temp<- unique(df_tracks$day * 100000 + df_tracks$journey_id)
 df_tragitto<-df_tracks
 df_tragitto<-cbind(df_tragitto, trip_id= df_tracks$day * 100000 + df_tracks$journey_id )
 
+indicini = rep(TRUE,n)
+for(i in 2:(n-1)){
+  
+  if((df_tragitto$stop_here[i]==1) &(df_tragitto$trip_id[i-1]==df_tragitto$trip_id[i]) & (df_tragitto$trip_id[i]==df_tragitto$trip_id[i+1])){
+    
+    indicini[i] = !((df_tragitto$stop_here[i-1]==1) & (df_tragitto$stop_here[i+1]==1))
+    
+  }
+}
+
+df_tragiotti = df_tragitto[indicini,]
+
+df_tragitto = df_tragiotto
+
+
 n<- dim(df_tragitto)[1]
 delta_t<- df_tragitto$timestamp[2:n ]- df_tragitto$timestamp[1:n-1]
 delta_t<-c(0,delta_t)
