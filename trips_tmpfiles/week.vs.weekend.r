@@ -281,6 +281,7 @@ plot(week[isWeekday,1:4])
 x11()
 plot(week[isWeekend,1:4])
 
+
 # 2) Homoschedasticity:
 x11()
 par(mfrow= c(1, 2))

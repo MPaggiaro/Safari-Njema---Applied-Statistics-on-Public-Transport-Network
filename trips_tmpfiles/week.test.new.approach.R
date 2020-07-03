@@ -492,6 +492,6 @@ image(S2, col=heat.colors(100),main='Cov. S2', asp=1, axes = FALSE, breaks = qua
 #non proprio, forse accettabile?
 
 #Non abbiamo per niente un large sample, quindi non possiamo usare il risultato asintotitco!
-
+graphics.off()
  
  
