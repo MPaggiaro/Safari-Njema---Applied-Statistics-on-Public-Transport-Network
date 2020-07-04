@@ -135,6 +135,8 @@ for ( i in 1:dim(elems)[1] ) {
 
 
 
+
+
 #identifying the zone on the map
 
 max_lat <- elems[elems$dep_north == max_N,]$dep_lat[1]
