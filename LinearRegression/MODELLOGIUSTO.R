@@ -38,7 +38,7 @@ elems <- df_trips_pos[which(localize_df$Zone_ID == 3 ),]
 
 
 hom_div_areas<- readOGR( 
-  dsn= paste0(getwd(),"/HomogenousDivisionOK") , 
+  dsn= paste0(getwd(),"/DistrictMap") , 
   layer="HomogenousDivisionOK",
   verbose=FALSE
 )
@@ -122,6 +122,131 @@ fit3 = lm( duration ~ distance + h + n_stop + d_stop + distance:n_stop +
 
 print ( summary(fit3) )
 
+# diagnosis
+par(mfrow=c(2,2))
+plot(fit3)
+# strange behaviour.
+
 z0 <- data.frame(distance = 5000, n_stop = 0, d_stop=3000, h = 1, slow = 0)
 Pred <- predict(fit3, z0, interval ='prediction', level = 0.95)
 Conf <- predict(fit3, z0, interval ='confidence', level = 0.95)
+
+# graphical representation:
+# conversions:
+# distance: kilometers.
+distance <- distance/1000
+
+# duration: minutes.
+duration <- duration/60
+dev.off()
+
+plot(distance, duration)
+
+# next model:
+logduration <- log(duration)
+logdistance <- log(distance)
+
+# plot of the logs:
+plot(logdistance, logduration, col="white")
+lento <- as.factor(lento)
+levels(lento)
+points(logdistance[which(lento==1)], logduration[which(lento==1)], col="blue")
+points(logdistance[which(lento==0)], logduration[which(lento==0)], col="green3")
+legend('bottomright',c('Lenti', 'Veloci'), lty=1,col =c('blue', 'green'))
+
+# clear but trivial interpretation.
+# Let's try with weekends:
+plot(logdistance, logduration, col="black")
+w1 <- as.factor(w1)
+levels(w1)
+points(logdistance[which(w1==1)], logduration[which(w1==1)], col="blue")
+points(logdistance[which(w1==0)], logduration[which(w1==0)], col="green3")
+legend('bottomright',c('Weekend', 'Weekdays'), lty=1,col =c('blue', 'green'))
+# weekend and weekdays hanno la stessa distribuzione distance vs duration
+# Interesting!
+
+# simple fitting:
+simple <- lm(logduration ~ logdistance)
+summary(simple)
+
+# diagnostics:
+par(mfrow=c(2,2))
+plot(simple)
+
+shapiro.test(residuals(simple))
+# results:
+
+graphics.off()
+plot(logdistance, logduration, col="black")
+coef.log= simple$coef
+abline(coef.log[1],coef.log[2], lwd=2,col='red')
+
+X.new.log <- data.frame(logdistance = seq(min(logdistance), max(logdistance), len=100))
+
+IC.log <-predict(simple ,X.new.log,interval="confidence",level=0.95)
+matplot(X.new.log,IC.log,add=T,type='l',col=c('black','blue','blue'),lwd=2,lty=2)
+
+IP.log <-predict(simple ,X.new.log,interval="prediction",level=0.95)
+matplot(X.new.log,IP.log,add=T,type='l',col=c('black','green','green'),lwd=2,lty=2)
+
+legend('bottomright', legend=c('regression line','confidence intervals','prediction intervals'),
+       col=c('black','blue','green'), lwd=2, cex=0.85)
+
+
+# plot of the original variables:
+plot(distance, duration, lwd=1)
+IC <- exp(IC.log)
+IP <- exp(IP.log)
+X.new <- exp(X.new.log)
+matplot(X.new,IC,add=T,type='l',col=c('black','blue','blue'),lwd=2,lty=2)
+matplot(X.new,IP,add=T,type='l',col=c('black','green','green'),lwd=2,lty=2)
+legend('bottomright', legend=c('regression line','confidence intervals','prediction intervals'),
+       col=c('black','blue','green'), lwd=2, cex=0.85)
+
+# let's try with hours of the day:
+
+# we need to select the actual trips from center to airport, not just
+# walkarounds.
+# distance center - airport: 10 km.
+# Let's cut the trips longer than 15kms
+distance_short <- distance[which(distance <= 15)]
+duration_short <- duration[which(distance <= 15)]  
+
+df_cut <- df_new[which(distance <= 15),]
+
+plot(distance_short, duration_short)  
+plot(log(distance_short), log(duration_short))
+     
+log.lm <- lm(log(duration_short) ~ log(distance_short))
+summary(log.lm)
+coef.log= log.lm$coef
+abline(coef.log[1],coef.log[2], lwd=2,col='red')
+
+# diagnostics:
+par(mfrow=c(2,2))
+plot(log.lm)
+shapiro.test(residuals(log.lm))
+
+# strange values: very fast!
+df_cut[607,]
+df_cut[626,]
+
+df_cut$distance <- df_cut$distance/1000
+df_cut$duration <- df_cut$duration/60
+
+# let's compute the average speed:
+speed <- df_cut$distance/(df_cut$duration/60)
+graphics.off()
+plot(speed)
+# let's select the people moving with regular cars:
+
+head(df_cut)
+df_cut <- cbind(df_cut, speed)
+head(df_cut)
+df_cut2 <- df_cut[which(speed < 80),]
+
+# plot
+dev.off()
+plot(log(df_cut$distance), log(df_cut$duration))
+df_cut2$speed
+df_cut2[which(df_cut2$speed<5.5),]
