@@ -61,7 +61,7 @@ squareCoords = function(i,j,gridmap,max_N,min_N,max_E,min_E,n){
 }
 
 ###### PARTENZA: ###### 
-
+{
 dat <- data.frame( Longitude=df_trips_pos$dep_lng, Latitude=df_trips_pos$dep_lat )
 coordinates(dat) <- ~ Longitude + Latitude
 proj4string(dat) <- proj4string(my_map)
@@ -72,7 +72,7 @@ proj4string(dat) <- proj4string(my_map)
 # cercare dove sono i punti
 localize_df <- over(dat,my_map) #tutti i punti che sono in df_track sonon localizzati nei 5 distretti
 
-
+n<-20
 
 #prendo solo i rilevamenti delle PARTENZE del dataframe in una delle 5 zone
 #toglie i NA
@@ -80,6 +80,8 @@ localize_df <- over(dat,my_map) #tutti i punti che sono in df_track sonon locali
 elems <- df_trips_pos[which(!is.na(localize_df$Zone_ID)),]
 
 elems <- df_trips_pos[which( localize_df$Zone_ID == 3 ),]#<--- VARIAZIONE SOLO UNA ZONA
+
+elems <- elems[which( elems$dep_hour > 11 & elems$dep_hour <= 14 ),]
 
 # plottare i punti
 # points(elems$lat ~ elems$lng, col = "red", cex = 1.5)
@@ -93,8 +95,8 @@ min_E <- min(elems$dep_east)
 
 # dividing the rectangle just found in a grid
 
-grid_h <- 40 #number of intervals in horizontal (i.e. number of columns in the grid)
-grid_v <- 40 #number of intervals in vertical (i.e. number of rows in the grid)
+grid_h <- n #number of intervals in horizontal (i.e. number of columns in the grid)
+grid_v <- n #number of intervals in vertical (i.e. number of rows in the grid)
 
 vec_v <- seq(min_E, max_E+0.1, length.out = grid_h+1) #ordino da sinistra a destra
 vec_h <- seq(max_N, min_N-0.1, length.out = grid_v+1) #ordino dall'alto in basso
@@ -157,10 +159,10 @@ vec_max_lat = NULL
 palette = NULL
 
 # riempio i vettori e creo la palette di colori
-pal=colorRampPalette(colors = c("green","yellow","red"))(max(density_grid)+1)
-for(i in 1:40){
-  for(j in 1:40){
-    sqcoord = squareCoords(i,j ,density_grid,max_N,min_N,max_E,min_E,40)
+pal=colorRampPalette(colors = c("palegreen","yellow", "orange","orangered" ,"red", "red4"))(max(density_grid)+1)
+for(i in 1:n){
+  for(j in 1:n){
+    sqcoord = squareCoords(i,j ,density_grid,max_N,min_N,max_E,min_E,n)
     vec_min_lng = c(vec_min_lng, min(sqcoord$lng))
     vec_max_lng = c(vec_max_lng, max(sqcoord$lng))
     vec_min_lat = c(vec_min_lat, min(sqcoord$lat))
@@ -172,17 +174,18 @@ for(i in 1:40){
 # piazzo i rettangolini sulla mappa per creare una sorta di heatmap
 mappa = leaflet(data = df) %>%addTiles()%>%addProviderTiles(providers$OpenStreetMap)%>%addRectangles(lng1 = vec_min_lng, lng2 = vec_max_lng, lat1 = vec_min_lat, lat2 = vec_max_lat, color = palette)
 mappa%>%addCircleMarkers(~df$my_lng, ~df$my_lat)
-
+}
 
 ######### ARRIVI  ######
-
+{
+  
 #Punti di partenza: 
 
 dat <- data.frame( Longitude=df_trips_pos$arr_lng, Latitude=df_trips_pos$arr_lat )
 coordinates(dat) <- ~ Longitude + Latitude
 proj4string(dat) <- proj4string(my_map)
 
-n<-50
+n<-20
 
 
 # cercare dove sono i punti
@@ -194,8 +197,9 @@ localize_df <- over(dat,my_map) #tutti i punti che sono in df_track sonon locali
 #toglie i NA
 
 elems <- df_trips_pos[which(!is.na(localize_df$Zone_ID)),]
+elems <- df_trips_pos[which( localize_df$Zone_ID == 3 ),]
+elems<- elems[which( elems$dep_hour > 11 & elems$dep_hour <= 14 ),]
 
-#elems <- df_trips_pos[which( localize_df$Zone_ID == 3 ),]#<--- VARIAZIONE SOLO UNA ZONA
 
 # plottare i punti
 # points(elems$lat ~ elems$lng, col = "red", cex = 1.5)
@@ -290,13 +294,7 @@ mappa = leaflet(data = df) %>%addTiles()%>%addProviderTiles(providers$OpenStreet
 mappa%>%addCircleMarkers(~df$my_lng, ~df$my_lat)
 
 
-#
-
-
-
-
-
-
+}
 
 
 #######  RISTORANTE #####
@@ -344,7 +342,7 @@ proj4string(dat) <- proj4string(my_map)
 # cercare dove sono i punti
 localize_df <- over(dat,my_map) #tutti i punti che sono in df_track sonon localizzati nei 5 distretti
 
-
+n<-20
 
 #prendo solo i rilevamenti delle PARTENZE del dataframe in una delle 5 zone
 #toglie i NA
@@ -451,3 +449,5 @@ for(i in 1:n){
 mappa = leaflet(data = df) %>%addTiles()%>%addProviderTiles(providers$OpenStreetMap)%>%addRectangles(lng1 = vec_min_lng, lng2 = vec_max_lng, lat1 = vec_min_lat, lat2 = vec_max_lat, color = palette)
 mappa%>%addCircleMarkers(~df$my_lng, ~df$my_lat)
 }
+
+
