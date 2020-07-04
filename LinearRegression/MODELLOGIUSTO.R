@@ -230,19 +230,23 @@ shapiro.test(residuals(log.lm))
 # strange values: very fast!
 df_cut[607,]
 df_cut[626,]
-# let's compute the average speed:
-speed <- distance_short/(duration_short/60)
-plot(speed)
-# let's select the people moving with regular cars:
+
 df_cut$distance <- df_cut$distance/1000
 df_cut$duration <- df_cut$duration/60
+
+# let's compute the average speed:
+speed <- df_cut$distance/(df_cut$duration/60)
+graphics.off()
+plot(speed)
+# let's select the people moving with regular cars:
+
 head(df_cut)
 df_cut <- cbind(df_cut, speed)
 head(df_cut)
-df_cut2 <- df_cut[which(speed < 50),]
+df_cut2 <- df_cut[which(speed < 80),]
 
 # plot
 dev.off()
-plot(log(df_cut2$distance), log(df_cut2$duration))
+plot(log(df_cut$distance), log(df_cut$duration))
 df_cut2$speed
 df_cut2[which(df_cut2$speed<5.5),]
