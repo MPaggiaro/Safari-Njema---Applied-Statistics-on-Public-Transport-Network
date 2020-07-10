@@ -450,6 +450,7 @@ for(i in 1:n){
 # piazzo i rettangolini sulla mappa per creare una sorta di heatmap
 mappa = leaflet(data = df) %>%addTiles()%>%addProviderTiles(providers$OpenStreetMap)%>%addRectangles(lng1 = vec_min_lng, lng2 = vec_max_lng, lat1 = vec_min_lat, lat2 = vec_max_lat, color = palette)
 mappa%>%addCircleMarkers(~df$my_lng, ~df$my_lat)
-}
 
+
+}
 

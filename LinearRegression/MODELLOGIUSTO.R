@@ -3,6 +3,7 @@ library(sf)
 library(rgdal)
 library(sp)
 library(car)
+rm(list=ls())
 
 #loading dataframes
 if (!exists("df_tracks")){
@@ -81,12 +82,22 @@ trip_to_tracks = function(trip_row, df_tracks)
 }
 
 max_list <- NULL
+#numero di stop
 stop_dur <- NULL
+#somma della durata degli stop
 avg_speed <- NULL
+#velocità media di tutto il trip
+
 for ( i in (1:dim(df_new)[1]) ){
+  
   tmp <- trip_to_tracks(df_new[i,], df_tracks )
-  max_list[i] <- max(tmp$stop_count)
+  
+  aux<- tmp$stop_here[2: dim(tmp)[1] ] - tmp$stop_here[1: (dim(tmp)[1]-1) ]
+  
+  max_list[i] <- length(which(aux >0)) + tmp$stop_here[1]
+  
   stop_dur[i] <- 0
+  
   if(dim(tmp)[1] > 1){
     for( j in (1: (dim(tmp)[1]-1) ) ){
       if ( tmp$stop_duration[j+1] == 0 ){
@@ -95,8 +106,11 @@ for ( i in (1:dim(df_new)[1]) ){
     }
     stop_dur[i] <- stop_dur[i] +  tmp$stop_duration[ dim(tmp)[1] ]
   }
+  
   avg_speed[i] <- mean(tmp$speed)
 }
+
+#dummy sulla velocità: 2.5 m/s ~ 10 km/h
 
 lento <- ifelse( avg_speed<=2.5, 1, 0 )
 dummy_stop <- ifelse( max_list<=4, 1, 0 )
@@ -106,6 +120,10 @@ detach(df_new)
 
 h <- ifelse( df_new$dep_hour < 6 , 1, 0)
 df_new <- cbind(df_new_archive, n_stop = dummy_stop, d_stop = stop_dur, slow = lento, h = h)
+
+
+we <- ifelse(df_new$day%%7 == 5, 1, 0) #dummy WEEKEND
+df_new<-cbind(df_new, we)
 
 attach(df_new)
 
@@ -126,10 +144,55 @@ print ( summary(fit3) )
 par(mfrow=c(2,2))
 plot(fit3)
 # strange behaviour.
+shapiro.test(residuals(fit3))
+
+
+#######
+
+logduration <- log(duration)
+logdistance <- log(distance)
+
+
+fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop + d_stop + we + logdistance:n_stop + 
+             d_stop:n_stop + logdistance:d_stop +  logdistance:slow + we:logdistance)
+
+summary(fit_log) 
+
+
+
+# first test: weekend influences?
+A <- rbind(c(0, 0,0,0,0,1,0,0,0,0,0), c(0, 0,0,0,0,0,0,0,0,0, 1))
+b <- c(0,0)
+linearHypothesis(fit_log, A, b)
+
+
+
+
+fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop  + slow  )
+summary(fit_log) 
+
+
+
+# first test: weekend influences?
+A <- rbind(c(0,0,0,0,1,0,0), c(0, 0,0,0,0,0, 1))
+b <- c(0,0)
+linearHypothesis(fit_log, A, b)
+
+# diagnosis
+par(mfrow=c(2,2))
+plot(fit_log)
+# strange behaviour.
+shapiro.test(residuals(fit_log))
+
+#######
+
+
 
 z0 <- data.frame(distance = 5000, n_stop = 0, d_stop=3000, h = 1, slow = 0)
 Pred <- predict(fit3, z0, interval ='prediction', level = 0.95)
 Conf <- predict(fit3, z0, interval ='confidence', level = 0.95)
+
+
 
 # graphical representation:
 # conversions:
@@ -147,7 +210,7 @@ logduration <- log(duration)
 logdistance <- log(distance)
 
 # plot of the logs:
-plot(logdistance, logduration, col="white")
+plot(logdistance, logduration, col='white')
 lento <- as.factor(lento)
 levels(lento)
 points(logdistance[which(lento==1)], logduration[which(lento==1)], col="blue")
