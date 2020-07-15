@@ -122,8 +122,8 @@ h <- ifelse( df_new$dep_hour < 6 , 1, 0)
 df_new <- cbind(df_new_archive, n_stop = dummy_stop, d_stop = stop_dur, slow = lento, h = h)
 
 
-we <- ifelse(df_new$day%%7 == 5, 1, 0) #dummy WEEKEND
-df_new<-cbind(df_new, we)
+we_s <- ifelse(df_new$day%%7 == 5, 1, 0) #dummy WEEKEND -sunday
+df_new<-cbind(df_new, we_s)
 
 attach(df_new)
 
@@ -147,36 +147,39 @@ plot(fit3)
 shapiro.test(residuals(fit3))
 
 
-#######
+################################################
+####### MODELLO FINALE #########################
+##############################################
 
 logduration <- log(duration)
 logdistance <- log(distance)
 
 
-fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop + d_stop + we + logdistance:n_stop + 
-             d_stop:n_stop + logdistance:d_stop +  logdistance:slow + we:logdistance)
+#fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop + d_stop + we + logdistance:n_stop + 
+#d_stop:n_stop + logdistance:d_stop +  logdistance:slow + we:logdistance)
 
+#summary(fit_log) 
+
+
+fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + we_s + we_s:logdistance +n_stop  + slow  )
 summary(fit_log) 
 
-
-
-# first test: weekend influences?
-A <- rbind(c(0, 0,0,0,0,1,0,0,0,0,0), c(0, 0,0,0,0,0,0,0,0,0, 1))
+# first test: weekend (Sunday) influences?
+A <- rbind(c(0,0,0,1,0,0,0), c(0, 0,0,0,0,0, 1))
 b <- c(0,0)
 linearHypothesis(fit_log, A, b)
+#no , pval=0.1766
+
+
+fit_log = lm( logduration ~ logdistance  + I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop  + slow  )
+summary(fit_log) #R2adj0.539
 
 
 
-
-fit_log = lm( logduration ~ logdistance + I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop  + slow  )
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop  + slow  )
 summary(fit_log) 
+#R2adj0.5419
 
-
-
-# first test: weekend influences?
-A <- rbind(c(0,0,0,0,1,0,0), c(0, 0,0,0,0,0, 1))
-b <- c(0,0)
-linearHypothesis(fit_log, A, b)
 
 # diagnosis
 par(mfrow=c(2,2))
@@ -184,14 +187,80 @@ plot(fit_log)
 # strange behaviour.
 shapiro.test(residuals(fit_log))
 
-#######
+
+## Insert the result from cluster (instead of slow)
+
+p_walk <-NULL
+p_chapas<-NULL
+
+for ( i in (1:dim(df_new)[1]) ){
+  #per ogni riga (cioè un trip), ne calcolo il trip id
+  trip_id_temp<- df_new$day[i] * 100000 + df_new$journey_id[i] 
+  #selezione il tragitto con il clustered dei segmenti
+  temp<-df_tragitto_clustered[df_tragitto_clustered$trip_id == trip_id_temp, ]
+  #calcolo percentualke di viaggio fatta a piedi
+  
+  n_walk<- length(which(temp$clust3 == 'walk'))
+  p_walk[i]<- n_walk/length(temp$clust3)
+  n_chapas<- length(which(temp$clust3 == 'chapas'))
+  p_chapas[i]<- n_chapas/length(temp$clust3)
+ 
+}
+
+df_new<- cbind(df_new, p_walk)
+df_new<- cbind(df_new, p_chapas)
 
 
 
-z0 <- data.frame(distance = 5000, n_stop = 0, d_stop=3000, h = 1, slow = 0)
-Pred <- predict(fit3, z0, interval ='prediction', level = 0.95)
-Conf <- predict(fit3, z0, interval ='confidence', level = 0.95)
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop +slow  + p_walk + p_walk:logdistance  )
+summary(fit_log) 
 
+
+# first test: p_walk influences?
+A <- rbind(c(0,0,0,0,0,0,0, 1), c(0, 0,0,0,0,0, 1, 0))
+b <- c(0,0)
+linearHypothesis(fit_log, A, b)
+#no , pval 2.2e-16 *** : si 
+
+
+
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop +slow + p_walk  )
+summary(fit_log) 
+
+#Tolgo slow perchè, secondo me, non ha senso nell'interpretazione del modello
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop + p_walk  )
+summary(fit_log) # R2ajd : 0.57 
+
+
+
+
+#Seleziono anche quanta % viaggio vorrei fare con la chaps
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) +n_stop + p_walk + p_chapas  )
+summary(fit_log) # R2ajd : 0.5779
+
+
+# diagnosis
+par(mfrow=c(2,2))
+plot(fit_log)
+# strange behaviour.
+shapiro.test(residuals(fit_log))
+#OK
+
+
+
+#Predizione: 
+z0 <- data.frame(logdistance = log(5000), n_stop = 0, dep_hour=8, p_walk=0.1, p_chapas=0.9)
+Pred <- predict(fit_log, z0, interval ='prediction', level = 0.95)
+Conf <- predict(fit_log, z0, interval ='confidence', level = 0.95)
+
+#In the original space: (???)
+
+exp(Pred)/60
+exp(Conf)/60
+
+
+###########################################################
+###########################################################
 
 
 # graphical representation:
