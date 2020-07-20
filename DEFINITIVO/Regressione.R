@@ -81,6 +81,8 @@ for ( i in (1:dim(df_new)[1]) ){
   avg_speed[i] <- mean(tmp$speed)
 }
 
+max_list -> n_stop
+
 #dummy sulla velocità: 2.5 m/s ~ 10 km/h
 lento <- ifelse( avg_speed<=2.5, 1, 0 )
 
@@ -130,17 +132,18 @@ fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)
 summary(fit_log) 
 #R2adj0.5419
 
+# (teniamo logd^2)
+
 # diagnosis
 par(mfrow=c(2,2))
 plot(fit_log)
 shapiro.test(residuals(fit_log))
 
 
-df_tragitto_clustered <- read.table("my_df_tragitto_clustered.txt")
-
-
 ## ------------------------------------------------------ ## 
 ## Insert the result from cluster (instead of slow)
+
+df_tragitto_clustered <- read.table("DEFINITIVO/my_df_tragitto_clustered.txt")
 
 p_walk <-NULL
 p_chapas<-NULL
@@ -176,7 +179,7 @@ linearHypothesis(fit_log, A, b)
 
 
 #Tolgo slow perchè, secondo me, non ha senso nell'interpretazione del modello
-fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) + df_new$n_stop + p_walk  )
+fit_log = lm( logduration ~ logdistance  + I(logdistance^2)+ I(cos((dep_hour+12)*2*pi/24 ) +1) + n_stop + p_walk  )
 summary(fit_log) # R2ajd : 0.57 
 
 
@@ -200,6 +203,8 @@ Conf <- predict(fit_log, z0, interval ='confidence', level = 0.95)
 
 #In the original space: viaggio in minuti (???)
 
+Pred
+Conf
 exp(Pred)/60
 exp(Conf)/60
 
