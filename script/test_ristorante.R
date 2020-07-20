@@ -565,3 +565,6 @@ mappa%>%addCircleMarkers(~area1$lng, ~area1$lat)
 
 
 
+
+
+
