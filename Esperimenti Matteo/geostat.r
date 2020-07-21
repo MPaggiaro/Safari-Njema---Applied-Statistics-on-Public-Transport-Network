@@ -18,6 +18,8 @@ library(sp)
 library(ggplot2)
 library(raster)
 
+graphics.off()
+
 # Let's analyze a first data:
 # reading data (e.g. day 51)
 tracks <- read.table("local_data/Tracks/tracks_51.txt", header=T)
@@ -91,7 +93,7 @@ my_map <- readOGR(
 lz.ok <- predict(g.tr, grid2, BLUE = FALSE)
 
 x11()
-spplot(lz.ok[,2])
+spplot(lz.ok[,1])
 
 # plot all together:
 
