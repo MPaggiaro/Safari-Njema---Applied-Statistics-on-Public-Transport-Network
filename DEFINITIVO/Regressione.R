@@ -20,6 +20,7 @@ if (!exists("df_trips_pos")){
   df_trips_pos <- read.table("local_data/df_trips_pos.txt", header=T)
 }
 
+
 #loading map
 my_map <- readOGR( 
   dsn= paste0(getwd(),"/trips_tmpfiles/shp_files") , 
