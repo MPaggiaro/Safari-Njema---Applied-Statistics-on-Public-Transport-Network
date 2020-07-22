@@ -93,7 +93,13 @@ my_map <- readOGR(
 lz.ok <- predict(g.tr, grid2, BLUE = FALSE)
 
 x11()
+
+save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
+
+lz.ok$var1.pred <- exp(lz.ok$var1.pred)
+lz.ok$var1.pred <- lz.ok$var1.pred*3.6 
 spplot(lz.ok[,1])
+save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
 
 # plot all together:
 

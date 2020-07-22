@@ -129,4 +129,12 @@ colnames(df_tragitto_clustered)[5]<- 'clust3'
 
 x11()
 
-plot(df_arch[, c(3,4)], pch=18, cex=0.05,  col=df_arch$clust3+1)
+df_tragitto_clustered <- read.table("DEFINITIVO/my_df_tragitto_clustered.txt", header = T)
+
+plot(df_tragitto_clustered$vi, pch=18, cex=0.05,  col=df_tragitto_clustered$clust3+1)
+# points(df_tragitto_clustered$vi[which(df_tragitto_clustered$clust3=='car')], pch= 18, cex=0.05, col = 'blue' )
+# points(df_tragitto_clustered$vi[which(df_tragitto_clustered$clust3=='chapas')], pch= 18, cex=0.05, col = 'red' )
+# points(df_tragitto_clustered$vi[which(df_tragitto_clustered$clust3=='walk')], pch= 18, cex=0.05, col = 'green' )
+legend("topright", legend=levels(df_tragitto_clustered$clust3), fill=c(1,2,3))
+
+
