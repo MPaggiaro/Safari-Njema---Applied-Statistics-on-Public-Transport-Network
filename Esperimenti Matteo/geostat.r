@@ -18,6 +18,8 @@ library(sp)
 library(ggplot2)
 library(raster)
 
+graphics.off()
+
 # Let's analyze a first data:
 # reading data (e.g. day 51)
 tracks <- read.table("local_data/Tracks/tracks_51.txt", header=T)
@@ -76,7 +78,7 @@ grid2 <- read.csv("grid.csv", header = T)
 colnames(grid2)<-c('lng','lat')
 head(grid2)
 coordinates(grid2)<- c('lng', 'lat')
-grid2 <- as(grid2, 'SpatialPixelsDataFrame')
+#grid2 <- as(grid2, 'SpatialPixelsDataFrame')
 
 # prediction:
 g.tr <- gstat(formula = log(speed) ~ 1, data = tracks_moving, model = v)
@@ -91,7 +93,7 @@ my_map <- readOGR(
 lz.ok <- predict(g.tr, grid2, BLUE = FALSE)
 
 x11()
-spplot(lz.ok)
+spplot(lz.ok[,1])
 
 # plot all together:
 

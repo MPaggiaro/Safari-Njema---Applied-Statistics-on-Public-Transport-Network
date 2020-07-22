@@ -1,19 +1,19 @@
-
 #cluster sulle velocità istantanee e medie per classificare il tipo di viaggio: 
 
 temp<- unique(df_tracks$day * 100000 + df_tracks$journey_id)
 
 df_tragitto<-df_tracks
 df_tragitto<-cbind(df_tragitto, trip_id= df_tracks$day * 100000 + df_tracks$journey_id )
+n<- dim(df_tragitto)[1]
 
 indicini = rep(TRUE,n)
 for(i in 2:(n-1)){
   
-    if((df_tragitto$stop_here[i]==1) &(df_tragitto$trip_id[i-1]==df_tragitto$trip_id[i]) & (df_tragitto$trip_id[i]==df_tragitto$trip_id[i+1])){
+  if((df_tragitto$stop_here[i]==1) &(df_tragitto$trip_id[i-1]==df_tragitto$trip_id[i]) & (df_tragitto$trip_id[i]==df_tragitto$trip_id[i+1])){
     
     indicini[i] = !((df_tragitto$stop_here[i-1]==1) & (df_tragitto$stop_here[i+1]==1))
-  
-    }
+    
+  }
 }
 
 df_tragitto = df_tragitto[indicini,]
@@ -53,7 +53,7 @@ df_tragitto_shuffled<- df_tragitto_no[a,]
 for ( i in seq(n+1,dim(df_tragitto_no)[1], by = n )){
   diss<-dist(df_tragitto_shuffled[(i-n):(i-1), c(3,4)])
   clust<-hclust(diss, method='ward.D2')
-
+  
   temp<-cutree(clust, k=3)+3
   
   is1= temp[which.min(df_tragitto_shuffled[(i-n):(i-1),]$vi)]
