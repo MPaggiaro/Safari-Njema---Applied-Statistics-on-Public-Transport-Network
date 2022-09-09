@@ -29,14 +29,17 @@ plot(tracks$speed)
 # simple variogram:
 # Let's build the dataset.
 # very skewed!
-hist(tracks$speed)
-hist(log(tracks$speed))
+hist(tracks$speed, col="darkolivegreen3", main='Histogram of speed', prob = TRUE, xlab = 'Speed')
+hist(log(tracks$speed), col="darkolivegreen3", main='Histogram of log(speed)', prob = TRUE, xlab = 'log(speed)')
 plot(log(tracks$speed))
+
+
 
 # should we clean data and evaluate only the moving points?
 tracks_moving <- tracks[which(tracks$stop_here==0),]
-hist(log(tracks_moving$speed))
+hist(log(tracks_moving$speed), col="darkolivegreen3", main='Log(speed) of moving points', prob = TRUE, xlab = 'log(speed)')
 plot(log(tracks_moving$speed))
+shapiro.test(sample(log(tracks_moving$speed),2000))
 # Now they seem very fit and well-shaped. Let's provide a variogram.
 
 coordinates(tracks_moving) <- c('lng', 'lat')
@@ -47,6 +50,11 @@ plot(variogram(log(speed) ~ 1, tracks_moving,
                alpha = c(0,45,90,135)), main = 'Sample Variogram',pch=19)
 # zonal anisotropy:
 plot(svgm, pch=19)
+
+
+# estimation of the wrong variogram:
+wvgm <- variogram(speed ~ 1, tracks_moving)
+plot(wvgm)
 
 v<-fit.variogram(svgm, vgm(0.7, "Sph", 0.05, 0.6))
 plot(svgm, v, pch=19)
@@ -81,6 +89,8 @@ coordinates(grid2)<- c('lng', 'lat')
 #grid2 <- as(grid2, 'SpatialPixelsDataFrame')
 
 # prediction:
+crs(tracks_moving) <-"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
 g.tr <- gstat(formula = log(speed) ~ 1, data = tracks_moving, model = v)
 summary(g.tr)
 
@@ -90,16 +100,20 @@ my_map <- readOGR(
   layer="Maputo5distr",
   verbose=FALSE
 )
-lz.ok <- predict(g.tr, grid2, BLUE = FALSE)
 
-x11()
+# lz.ok <- predict(g.tr, my_map, BLUE = FALSE)
+# 
+# lz.ok <- predict(g.tr, grid2, BLUE = FALSE)
+# 
+# x11()
+# 
+# save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
+# 
+# lz.ok$var1.pred <- exp(lz.ok$var1.pred)
+# lz.ok$var1.pred <- lz.ok$var1.pred*3.6 
+load("Esperimenti Matteo/prediction.Rda")
 
-save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
-
-lz.ok$var1.pred <- exp(lz.ok$var1.pred)
-lz.ok$var1.pred <- lz.ok$var1.pred*3.6 
 spplot(lz.ok[,1])
-save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
+# save(lz.ok,file = "Esperimenti Matteo/prediction.Rda")
 
-# plot all together:
 
